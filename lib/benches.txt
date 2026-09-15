@@ -1,0 +1,27 @@
+# Default benchmark set, one regexp per line. Every one of these exists at all 20
+# stable tags in the archive and ran successfully at both ends of that window
+# (v3.24.0-stable/go1.21.10 and v5.0.1-stable/go1.25.3) on 2026-09-14.
+BenchmarkTxn
+BenchmarkPaysetGroups
+BenchmarkCompactDeltas
+BenchmarkTxHandlerProcessing
+BenchmarkMerkleCommit
+BenchmarkAppendMsgSignedTxn
+BenchmarkAppendMsgBlockHeader
+#
+# Deliberately absent. benchspotter abandons the rest of a session when one
+# package's `go test` fails, so a benchmark that fails costs the whole run:
+#
+#   BenchmarkHandleTxnGroups      panics at every tag in the window:
+#                                 runHandlerBenchmarkWithBacklog emulates Start()
+#                                 without starting the ElasticRateLimiter, and
+#                                 handler.Stop() then calls a nil ctxCancel.
+#   BenchmarkBlockValidationMix   "proposer missing when payouts enabled" at both
+#                                 ends: builds blocks under ConsensusFuture.
+#   BenchmarkBlockEvaluatorRAM*   same error from v4.0.x on, once payouts became
+#                                 part of ConsensusCurrentVersion.
+#   BenchmarkPay, BenchmarkAppInt1   same error at v3.24.0 (ConsensusFuture).
+#   BenchmarkPrefetcherPayment    fails at v3.24.0.
+#
+# Any block-building ledger benchmark needs an upstream fix (the harness must set
+# a proposer) before it can be trended.

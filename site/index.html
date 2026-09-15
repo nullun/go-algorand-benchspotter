@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>go-algorand benchmark trends</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fbfbfa; --fg: #1a1a1a; --muted: #6a6a6a; --line: #d8d8d4;
+    --panel: #ffffff; --accent: #2f6f4f; --warn: #a33;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #16171a; --fg: #e8e8e6; --muted: #9a9a96; --line: #32343a;
+            --panel: #1d1f23; --accent: #69b58c; --warn: #e07a7a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--fg);
+         font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+           padding: 14px; margin-bottom: 16px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  select, input { font: inherit; padding: 5px 7px; border: 1px solid var(--line);
+                  border-radius: 5px; background: var(--bg); color: var(--fg); }
+  select { max-width: 460px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 13px; }
+  .tags label { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--fg); }
+  svg { width: 100%; height: auto; display: block; }
+  .grid { stroke: var(--line); stroke-width: 1; }
+  .axis { fill: var(--muted); font-size: 11px; }
+  .line { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+  .dot { fill: var(--accent); }
+  .dot.hit { fill: transparent; }
+  .tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--fg);
+         border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12px;
+         box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; transition: opacity .1s; max-width: 320px; }
+  .tip b { font-weight: 600; }
+  .tip .delta.up { color: var(--warn); }
+  .tip .delta.down { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 12px; }
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>go-algorand benchmark trends</h1>
+  <p class="sub" id="sub">loading...</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label for="bench">benchmark</label>
+        <select id="bench"></select>
+      </div>
+      <div>
+        <label for="metric">metric</label>
+        <select id="metric"></select>
+      </div>
+      <div>
+        <label for="filter">name filter</label>
+        <input id="filter" type="search" placeholder="e.g. MerkleCommit" size="18">
+      </div>
+    </div>
+    <div class="tags" id="tags"></div>
+  </div>
+
+  <div class="panel">
+    <div id="chart"></div>
+    <p class="meta" id="chartmeta"></p>
+  </div>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const tip = $("tip");
+let DATA, SELECTED = new Set();
+
+const UNITS = {
+  "ns/op":     v => v >= 1e9 ? (v/1e9).toFixed(2)+" s"  : v >= 1e6 ? (v/1e6).toFixed(2)+" ms"
+                  : v >= 1e3 ? (v/1e3).toFixed(2)+" µs" : v.toFixed(1)+" ns",
+  "B/op":      v => v >= 1e6 ? (v/1e6).toFixed(2)+" MB" : v >= 1e3 ? (v/1e3).toFixed(2)+" kB" : v+" B",
+  "allocs/op": v => String(v),
+};
+const fmt = (v, unit) => v == null ? "-" : (UNITS[unit] || (x => x.toPrecision(4)))(v);
+
+function visibleSessions() {
+  if (!SELECTED.size) return DATA.sessions.map((s, i) => i);
+  return DATA.sessions.map((s, i) => i)
+    .filter(i => DATA.sessions[i].tags.some(t => SELECTED.has(t)));
+}
+
+function draw() {
+  const name = $("bench").value, unit = $("metric").value;
+  const idx = visibleSessions();
+  const values = idx.map(i => (DATA.series[name] || {})[unit]?.[i] ?? null);
+  const points = idx.map((i, k) => ({ i, v: values[k] })).filter(p => p.v != null);
+  const chart = $("chart");
+
+  if (points.length < 2) {
+    chart.innerHTML = '<p class="empty">not enough sessions with this benchmark and these tags</p>';
+    $("chartmeta").textContent = "";
+    return;
+  }
+
+  const W = 1060, H = 380, L = 70, R = 16, T = 16, B = 64;
+  const lo = Math.min(...points.map(p => p.v)), hi = Math.max(...points.map(p => p.v));
+  // Always include a little headroom, and never a zero-height band for a flat series.
+  const pad = (hi - lo) * 0.12 || Math.abs(hi) * 0.05 || 1;
+  const y0 = Math.max(0, lo - pad), y1 = hi + pad;
+  const px = k => L + (points.length === 1 ? 0 : k * (W - L - R) / (points.length - 1));
+  const py = v => T + (H - T - B) * (1 - (v - y0) / (y1 - y0));
+
+  const ticks = 5, parts = [];
+  for (let t = 0; t <= ticks; t++) {
+    const v = y0 + (y1 - y0) * t / ticks, y = py(v);
+    parts.push(`<line class="grid" x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}"/>`);
+    parts.push(`<text class="axis" x="${L - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end">${fmt(v, unit)}</text>`);
+  }
+
+  // x labels: session name, thinned so they stay readable.
+  const step = Math.ceil(points.length / 12);
+  points.forEach((p, k) => {
+    if (k % step) return;
+    const s = DATA.sessions[p.i];
+    parts.push(`<text class="axis" x="${px(k).toFixed(1)}" y="${H - B + 20}" text-anchor="end"
+      transform="rotate(-35 ${px(k).toFixed(1)} ${H - B + 20})">${s.name}</text>`);
+  });
+
+  parts.push(`<path class="line" d="${points.map((p, k) => `${k ? "L" : "M"}${px(k).toFixed(1)},${py(p.v).toFixed(1)}`).join("")}"/>`);
+  points.forEach((p, k) => {
+    parts.push(`<circle class="dot" cx="${px(k).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="2.5"/>`);
+    parts.push(`<circle class="dot hit" cx="${px(k).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="10"
+      data-k="${k}" data-i="${p.i}"/>`);
+  });
+
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${name} ${unit}">${parts.join("")}</svg>`;
+
+  const first = points[0].v, last = points[points.length - 1].v;
+  const change = ((last - first) / first) * 100;
+  $("chartmeta").textContent =
+    `${points.length} sessions, ${fmt(first, unit)} at ${DATA.sessions[points[0].i].name}` +
+    ` to ${fmt(last, unit)} at ${DATA.sessions[points[points.length - 1].i].name}` +
+    ` (${change >= 0 ? "+" : ""}${change.toFixed(1)}%)`;
+
+  chart.querySelectorAll(".hit").forEach(c => {
+    c.addEventListener("mouseenter", e => {
+      const k = +c.dataset.k, s = DATA.sessions[+c.dataset.i], v = points[k].v;
+      const prev = k ? points[k - 1].v : null;
+      const d = prev == null ? "" : ((v - prev) / prev) * 100;
+      tip.innerHTML = `<b>${s.name}</b> ${s.commit}<br>${s.time.slice(0, 16).replace("T", " ")}<br>` +
+        `${fmt(v, unit)}` +
+        (prev == null ? "" : ` <span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}%</span>`) +
+        `<br><span class="meta">${s.tags.join(", ")}<br>${s.cpu}, ${s.platform}</span>`;
+      tip.style.opacity = 1;
+    });
+    c.addEventListener("mousemove", e => {
+      tip.style.left = Math.min(e.clientX + 14, innerWidth - 340) + "px";
+      tip.style.top = (e.clientY + 14) + "px";
+    });
+    c.addEventListener("mouseleave", () => { tip.style.opacity = 0; });
+  });
+}
+
+function fillBenchmarks() {
+  const q = $("filter").value.toLowerCase();
+  const keep = Object.keys(DATA.series).filter(n => n.toLowerCase().includes(q));
+  const current = $("bench").value;
+  $("bench").innerHTML = keep.map(n => `<option${n === current ? " selected" : ""}>${n}</option>`).join("");
+  if (!keep.includes(current) && keep.length) $("bench").value = keep[0];
+  fillMetrics();
+}
+
+function fillMetrics() {
+  const units = Object.keys(DATA.series[$("bench").value] || {});
+  const current = $("metric").value;
+  $("metric").innerHTML = units.map(u => `<option${u === current ? " selected" : ""}>${u}</option>`).join("");
+  if (!units.includes(current) && units.length) $("metric").value = units.includes("ns/op") ? "ns/op" : units[0];
+}
+
+fetch("data.json").then(r => r.json()).then(data => {
+  DATA = data;
+  const machines = [...new Set(data.sessions.map(s => `${s.cpu} (${s.platform})`))];
+  $("sub").textContent =
+    `${data.sessions.length} sessions, ${Object.keys(data.series).length} benchmarks, ` +
+    `built ${data.generated.slice(0, 16).replace("T", " ")} UTC. ${machines.join(" / ")}.`;
+
+  const tags = [...new Set(data.sessions.flatMap(s => s.tags))].sort();
+  $("tags").innerHTML = "<span class=\"meta\">tags:</span>" + tags.map(t =>
+    `<label><input type="checkbox" value="${t}"> ${t}</label>`).join("");
+  $("tags").addEventListener("change", e => {
+    SELECTED = new Set([...$("tags").querySelectorAll("input:checked")].map(i => i.value));
+    draw();
+  });
+
+  fillBenchmarks();
+  if ($("bench").querySelector('option[value="BenchmarkTxn"]')) $("bench").value = "BenchmarkTxn";
+  fillMetrics();
+  draw();
+
+  $("filter").addEventListener("input", () => { fillBenchmarks(); draw(); });
+  $("bench").addEventListener("change", () => { fillMetrics(); draw(); });
+  $("metric").addEventListener("change", draw);
+  addEventListener("resize", draw);
+}).catch(e => { $("sub").textContent = "failed to load data.json: " + e; });
+</script>
+</body>
+</html>
