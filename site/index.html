@@ -35,6 +35,7 @@
   .line { fill: none; stroke: var(--accent); stroke-width: 1.5; }
   .dot { fill: var(--accent); }
   .dot.hit { fill: transparent; }
+  .band { fill: var(--accent); opacity: .16; stroke: none; }
   .tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--fg);
          border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12px;
          box-shadow: 0 4px 14px rgba(0,0,0,.18); opacity: 0; transition: opacity .1s; max-width: 320px; }
@@ -62,7 +63,11 @@
       </div>
       <div>
         <label for="filter">name filter</label>
-        <input id="filter" type="search" placeholder="e.g. MerkleCommit" size="18">
+        <input id="filter" type="search" placeholder="e.g. TxHandler" size="18">
+      </div>
+      <div>
+        <label for="group">repeats</label>
+        <label style="color: var(--fg)"><input id="group" type="checkbox" checked> combine</label>
       </div>
     </div>
     <div class="tags" id="tags"></div>
@@ -87,6 +92,11 @@ const UNITS = {
   "allocs/op": v => String(v),
 };
 const fmt = (v, unit) => v == null ? "-" : (UNITS[unit] || (x => x.toPrecision(4)))(v);
+const median = xs => {
+  const a = [...xs].sort((p, q) => p - q);
+  return a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2;
+};
+const runnerOf = s => s.tags.find(t => t.startsWith("runner:")) || "runner:?";
 
 function visibleSessions() {
   if (!SELECTED.size) return DATA.sessions.map((s, i) => i);
@@ -94,11 +104,32 @@ function visibleSessions() {
     .filter(i => DATA.sessions[i].tags.some(t => SELECTED.has(t)));
 }
 
+// One x position per commit per machine. The repeats of a set (RUNS=3) are
+// separate benchspotter sessions of the same commit, so they belong on one
+// point: the line is their median, the band their range. -count=4 is a level
+// below that again, already reduced to a median per session at build time.
+function groups() {
+  const idx = visibleSessions();
+  if (!$("group").checked) {
+    return idx.map(i => ({ label: DATA.sessions[i].name, idx: [i] }));
+  }
+  const out = [], seen = new Map();
+  for (const i of idx) {
+    const s = DATA.sessions[i], key = s.commit + "|" + runnerOf(s);
+    if (!seen.has(key)) { seen.set(key, { label: s.name, idx: [] }); out.push(seen.get(key)); }
+    seen.get(key).idx.push(i);
+  }
+  return out;
+}
+
 function draw() {
   const name = $("bench").value, unit = $("metric").value;
-  const idx = visibleSessions();
-  const values = idx.map(i => (DATA.series[name] || {})[unit]?.[i] ?? null);
-  const points = idx.map((i, k) => ({ i, v: values[k] })).filter(p => p.v != null);
+  const values = (DATA.series[name] || {})[unit] || [];
+  const points = [];
+  for (const g of groups()) {
+    const vs = g.idx.map(i => values[i]).filter(v => v != null);
+    if (vs.length) points.push({ g, v: median(vs), lo: Math.min(...vs), hi: Math.max(...vs), n: vs.length });
+  }
   const chart = $("chart");
 
   if (points.length < 2) {
@@ -108,54 +139,62 @@ function draw() {
   }
 
   const W = 1060, H = 380, L = 70, R = 16, T = 16, B = 64;
-  const lo = Math.min(...points.map(p => p.v)), hi = Math.max(...points.map(p => p.v));
-  // Always include a little headroom, and never a zero-height band for a flat series.
+  const lo = Math.min(...points.map(p => p.lo)), hi = Math.max(...points.map(p => p.hi));
+  // Always leave headroom, and never a zero-height band for a flat series.
   const pad = (hi - lo) * 0.12 || Math.abs(hi) * 0.05 || 1;
   const y0 = Math.max(0, lo - pad), y1 = hi + pad;
-  const px = k => L + (points.length === 1 ? 0 : k * (W - L - R) / (points.length - 1));
+  const px = k => L + k * (W - L - R) / (points.length - 1);
   const py = v => T + (H - T - B) * (1 - (v - y0) / (y1 - y0));
 
-  const ticks = 5, parts = [];
+  const parts = [], ticks = 5;
   for (let t = 0; t <= ticks; t++) {
     const v = y0 + (y1 - y0) * t / ticks, y = py(v);
     parts.push(`<line class="grid" x1="${L}" y1="${y.toFixed(1)}" x2="${W - R}" y2="${y.toFixed(1)}"/>`);
     parts.push(`<text class="axis" x="${L - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end">${fmt(v, unit)}</text>`);
   }
 
-  // x labels: session name, thinned so they stay readable.
   const step = Math.ceil(points.length / 12);
   points.forEach((p, k) => {
     if (k % step) return;
-    const s = DATA.sessions[p.i];
     parts.push(`<text class="axis" x="${px(k).toFixed(1)}" y="${H - B + 20}" text-anchor="end"
-      transform="rotate(-35 ${px(k).toFixed(1)} ${H - B + 20})">${s.name}</text>`);
+      transform="rotate(-35 ${px(k).toFixed(1)} ${H - B + 20})">${p.g.label}</text>`);
   });
+
+  // The band is the spread of the repeats, which is the yardstick for whether a
+  // step between two points means anything.
+  if (points.some(p => p.n > 1)) {
+    const top = points.map((p, k) => `${k ? "L" : "M"}${px(k).toFixed(1)},${py(p.hi).toFixed(1)}`).join("");
+    const bottom = points.slice().reverse()
+      .map((p, k) => `L${px(points.length - 1 - k).toFixed(1)},${py(p.lo).toFixed(1)}`).join("");
+    parts.push(`<path class="band" d="${top}${bottom}Z"/>`);
+  }
 
   parts.push(`<path class="line" d="${points.map((p, k) => `${k ? "L" : "M"}${px(k).toFixed(1)},${py(p.v).toFixed(1)}`).join("")}"/>`);
   points.forEach((p, k) => {
     parts.push(`<circle class="dot" cx="${px(k).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="2.5"/>`);
-    parts.push(`<circle class="dot hit" cx="${px(k).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="10"
-      data-k="${k}" data-i="${p.i}"/>`);
+    parts.push(`<circle class="dot hit" cx="${px(k).toFixed(1)}" cy="${py(p.v).toFixed(1)}" r="10" data-k="${k}"/>`);
   });
 
   chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${name} ${unit}">${parts.join("")}</svg>`;
 
-  const first = points[0].v, last = points[points.length - 1].v;
-  const change = ((last - first) / first) * 100;
+  const first = points[0], last = points[points.length - 1];
+  const change = ((last.v - first.v) / first.v) * 100;
+  const sessions = points.reduce((n, p) => n + p.n, 0);
   $("chartmeta").textContent =
-    `${points.length} sessions, ${fmt(first, unit)} at ${DATA.sessions[points[0].i].name}` +
-    ` to ${fmt(last, unit)} at ${DATA.sessions[points[points.length - 1].i].name}` +
-    ` (${change >= 0 ? "+" : ""}${change.toFixed(1)}%)`;
+    `${points.length} points (${sessions} sessions), ${fmt(first.v, unit)} at ${first.g.label}` +
+    ` to ${fmt(last.v, unit)} at ${last.g.label} (${change >= 0 ? "+" : ""}${change.toFixed(1)}%)`;
 
   chart.querySelectorAll(".hit").forEach(c => {
-    c.addEventListener("mouseenter", e => {
-      const k = +c.dataset.k, s = DATA.sessions[+c.dataset.i], v = points[k].v;
+    c.addEventListener("mouseenter", () => {
+      const k = +c.dataset.k, p = points[k], s = DATA.sessions[p.g.idx[0]];
       const prev = k ? points[k - 1].v : null;
-      const d = prev == null ? "" : ((v - prev) / prev) * 100;
-      tip.innerHTML = `<b>${s.name}</b> ${s.commit}<br>${s.time.slice(0, 16).replace("T", " ")}<br>` +
-        `${fmt(v, unit)}` +
-        (prev == null ? "" : ` <span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}%</span>`) +
-        `<br><span class="meta">${s.tags.join(", ")}<br>${s.cpu}, ${s.platform}</span>`;
+      const d = prev == null ? null : ((p.v - prev) / prev) * 100;
+      const spread = p.n > 1 ? ((p.hi - p.lo) / p.v) * 100 : null;
+      tip.innerHTML = `<b>${p.g.label}</b> ${s.commit}<br>${s.time.slice(0, 16).replace("T", " ")}<br>` +
+        `${fmt(p.v, unit)}` +
+        (d == null ? "" : ` <span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}%</span>`) +
+        (spread == null ? "" : `<br><span class="meta">${p.n} runs, ${fmt(p.lo, unit)} to ${fmt(p.hi, unit)}, spread ${spread.toFixed(1)}%</span>`) +
+        `<br><span class="meta">${s.tags.filter(t => !/^run\d+$/.test(t)).join(", ")}<br>${s.cpu}, ${s.platform}</span>`;
       tip.style.opacity = 1;
     });
     c.addEventListener("mousemove", e => {
@@ -192,13 +231,13 @@ fetch("data.json").then(r => r.json()).then(data => {
     `Hover a point for the commit and the machine that ran it; only compare sessions ` +
     `sharing a runner tag.`;
 
-  // runN only says which repeat of a set a session was, which the tooltip and the
-  // session name already carry; as a filter it is noise.
+  // runN only says which repeat of a set a session was, and repeats are combined
+  // into one point anyway; as a filter it is noise.
   const tags = [...new Set(data.sessions.flatMap(s => s.tags))]
     .filter(t => !/^run\d+$/.test(t)).sort();
   $("tags").innerHTML = "<span class=\"meta\">tags:</span>" + tags.map(t =>
     `<label><input type="checkbox" value="${t}"> ${t}</label>`).join("");
-  $("tags").addEventListener("change", e => {
+  $("tags").addEventListener("change", () => {
     SELECTED = new Set([...$("tags").querySelectorAll("input:checked")].map(i => i.value));
     draw();
   });
@@ -211,6 +250,7 @@ fetch("data.json").then(r => r.json()).then(data => {
   $("filter").addEventListener("input", () => { fillBenchmarks(); draw(); });
   $("bench").addEventListener("change", () => { fillMetrics(); draw(); });
   $("metric").addEventListener("change", draw);
+  $("group").addEventListener("change", draw);
   addEventListener("resize", draw);
 }).catch(e => { $("sub").textContent = "failed to load data.json: " + e; });
 </script>

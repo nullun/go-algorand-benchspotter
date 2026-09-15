@@ -80,10 +80,10 @@ Known artefacts, both worth checking before believing a jump:
   pins it to the Go implementation, which is what algod has defaulted to since v4.4.1. The v3 and
   v4 sessions in the archive predate the patch and are mostly libsodium numbers, so they are not
   comparable to production and not comparable to each other tag by tag.
-- `MerkleCommit` is recorded for `sha512_256` only from 2026-09-15 on. The benchmark's
-  3 x 5 x 5 grid of hash x Item x Count produced 45 series that all moved together, and cost
-  most of the run time of a session. The `sha256` and `sumhash` series stay in the archive and
-  the site marks them as no longer recorded.
+- `MerkleCommit` is not recorded from 2026-09-15 on. Its 3 x 5 x 5 grid of hash family x Item x
+  Count produced 45 of the 52 series in the archive, they all moved together, and they were most
+  of the run time of a session. The archived series stay readable and the site marks them as no
+  longer recorded; `lib/benches.txt` says how to bring them back.
 - `AppendMsgBlockHeader` steps +14% at v4.2.1 because msgp_gen was regenerated for a larger block
   header, not because anything got slower. `AppendMsgSignedTxn` is flat across the same commit,
   which is how you can tell.
