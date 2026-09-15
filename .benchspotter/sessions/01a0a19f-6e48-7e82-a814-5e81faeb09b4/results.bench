@@ -1,0 +1,228 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/algorand/go-algorand/crypto/merklearray
+cpu: Apple M2 Pro
+
+BenchmarkMerkleCommit/sha512_256/Item10/Count10-12 80912 13339 ns/op 6095 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10-12 86971 13587 ns/op 6085 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10-12 87288 13281 ns/op 6093 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10-12 90247 13689 ns/op 6085 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100-12 23229 52582 ns/op 34661 B/op 760 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100-12 22497 51554 ns/op 34675 B/op 761 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100-12 23296 52618 ns/op 34658 B/op 760 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100-12 23413 51406 ns/op 34675 B/op 761 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count1000-12 4880 251866 ns/op 298976 B/op 7090 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count1000-12 4830 248104 ns/op 299027 B/op 7091 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count1000-12 4850 251043 ns/op 298959 B/op 7090 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count1000-12 4872 247502 ns/op 299022 B/op 7091 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10000-12 958 1.28289e+06 ns/op 2.920313e+06 B/op 70181 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10000-12 952 1.259169e+06 ns/op 2.920587e+06 B/op 70183 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10000-12 957 1.268401e+06 ns/op 2.92034e+06 B/op 70181 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count10000-12 961 1.256135e+06 ns/op 2.920569e+06 B/op 70183 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100000-12 154 7.965861e+06 ns/op 2.8865827e+07 B/op 700278 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100000-12 156 7.890733e+06 ns/op 2.886602e+07 B/op 700279 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100000-12 156 7.729263e+06 ns/op 2.8866447e+07 B/op 700282 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item10/Count100000-12 150 7.743767e+06 ns/op 2.8866498e+07 B/op 700282 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10-12 50154 21898 ns/op 16254 B/op 108 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10-12 52686 22157 ns/op 16256 B/op 108 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10-12 56582 22489 ns/op 16253 B/op 108 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10-12 53252 21430 ns/op 16260 B/op 108 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100-12 12886 96517 ns/op 135872 B/op 763 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100-12 12888 95517 ns/op 135868 B/op 763 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100-12 12672 94772 ns/op 135892 B/op 763 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100-12 12513 93240 ns/op 135896 B/op 763 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count1000-12 2562 490895 ns/op 1.308348e+06 B/op 7099 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count1000-12 2482 480073 ns/op 1.3084e+06 B/op 7100 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count1000-12 2491 486838 ns/op 1.308397e+06 B/op 7100 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count1000-12 2496 482663 ns/op 1.308457e+06 B/op 7100 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10000-12 363 3.226662e+06 ns/op 1.3000778e+07 B/op 70184 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10000-12 386 3.108567e+06 ns/op 1.3000942e+07 B/op 70185 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10000-12 369 3.31771e+06 ns/op 1.3001049e+07 B/op 70186 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count10000-12 375 3.252161e+06 ns/op 1.3001048e+07 B/op 70186 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100000-12 45 2.6974463e+07 ns/op 1.29665665e+08 B/op 700276 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100000-12 46 2.6215864e+07 ns/op 1.2966592e+08 B/op 700277 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100000-12 45 2.6869879e+07 ns/op 1.2966574e+08 B/op 700276 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item1000/Count100000-12 45 2.6367731e+07 ns/op 1.29665801e+08 B/op 700277 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10-12 3715 323472 ns/op 1.072376e+06 B/op 117 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10-12 3819 318484 ns/op 1.072365e+06 B/op 117 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10-12 3708 321061 ns/op 1.072395e+06 B/op 117 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10-12 3783 326053 ns/op 1.072392e+06 B/op 117 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100-12 640 1.902924e+06 ns/op 1.0685836e+07 B/op 781 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100-12 604 1.913674e+06 ns/op 1.0685817e+07 B/op 781 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100-12 626 1.879461e+06 ns/op 1.0685821e+07 B/op 781 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100-12 616 1.917083e+06 ns/op 1.0685826e+07 B/op 781 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count1000-12 66 1.7512127e+07 ns/op 1.06782711e+08 B/op 7113 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count1000-12 67 1.7983637e+07 ns/op 1.06782628e+08 B/op 7112 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count1000-12 66 1.7472547e+07 ns/op 1.06782909e+08 B/op 7115 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count1000-12 68 1.7707327e+07 ns/op 1.06782509e+08 B/op 7111 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10000-12 7 1.62725458e+08 ns/op 1.067733098e+09 B/op 70247 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10000-12 7 1.65464125e+08 ns/op 1.067731368e+09 B/op 70231 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10000-12 7 1.6384369e+08 ns/op 1.067734524e+09 B/op 70260 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count10000-12 7 1.66122762e+08 ns/op 1.067733141e+09 B/op 70246 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100000-12 1 1.329698417e+09 ns/op 1.067691452e+10 B/op 700395 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100000-12 1 1.381573959e+09 ns/op 1.067693284e+10 B/op 700569 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100000-12 1 1.327179541e+09 ns/op 1.0676934984e+10 B/op 700611 allocs/op
+BenchmarkMerkleCommit/sha512_256/Item100000/Count100000-12 1 1.386146541e+09 ns/op 1.067694412e+10 B/op 700677 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10-12 23989 50030 ns/op 16794 B/op 217 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10-12 24549 49002 ns/op 16813 B/op 217 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10-12 24622 49926 ns/op 16795 B/op 217 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10-12 24487 48994 ns/op 16815 B/op 217 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100-12 4893 238097 ns/op 134809 B/op 1722 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100-12 5134 234976 ns/op 134836 B/op 1723 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100-12 5010 237698 ns/op 134795 B/op 1722 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100-12 5083 235210 ns/op 134846 B/op 1723 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count1000-12 1123 1.079579e+06 ns/op 1.268701e+06 B/op 16240 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count1000-12 1120 1.05879e+06 ns/op 1.26888e+06 B/op 16242 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count1000-12 1143 1.06896e+06 ns/op 1.268717e+06 B/op 16240 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count1000-12 1137 1.05319e+06 ns/op 1.268809e+06 B/op 16241 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10000-12 188 6.488865e+06 ns/op 1.2537991e+07 B/op 160466 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10000-12 188 6.431213e+06 ns/op 1.2538318e+07 B/op 160470 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10000-12 183 6.350345e+06 ns/op 1.2538445e+07 B/op 160471 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count10000-12 187 6.534707e+06 ns/op 1.2537941e+07 B/op 160466 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100000-12 22 4.9985845e+07 ns/op 1.24885823e+08 B/op 1.600653e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100000-12 24 5.1274939e+07 ns/op 1.24885371e+08 B/op 1.600647e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100000-12 22 4.9994163e+07 ns/op 1.24885978e+08 B/op 1.600654e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item10/Count100000-12 24 5.07998e+07 ns/op 1.24885404e+08 B/op 1.600647e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10-12 10000 103229 ns/op 28621 B/op 232 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10-12 10000 101553 ns/op 28612 B/op 232 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10-12 10000 105006 ns/op 28612 B/op 232 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10-12 10000 101875 ns/op 28614 B/op 232 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100-12 2683 459206 ns/op 250120 B/op 1843 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100-12 2659 453297 ns/op 250199 B/op 1844 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100-12 2641 453915 ns/op 250206 B/op 1844 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100-12 2499 461382 ns/op 250131 B/op 1843 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count1000-12 478 2.488976e+06 ns/op 2.406591e+06 B/op 17262 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count1000-12 450 2.499376e+06 ns/op 2.406486e+06 B/op 17261 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count1000-12 480 2.484851e+06 ns/op 2.406525e+06 B/op 17262 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count1000-12 434 2.50059e+06 ns/op 2.406443e+06 B/op 17261 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10000-12 63 1.9360837e+07 ns/op 2.3898991e+07 B/op 170477 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10000-12 62 1.9856263e+07 ns/op 2.389851e+07 B/op 170471 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10000-12 64 1.9468012e+07 ns/op 2.3898625e+07 B/op 170472 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count10000-12 61 2.0073443e+07 ns/op 2.3898293e+07 B/op 170469 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100000-12 6 1.72301403e+08 ns/op 2.38486562e+08 B/op 1.700656e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100000-12 6 1.77655021e+08 ns/op 2.38486157e+08 B/op 1.700652e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100000-12 6 1.71641014e+08 ns/op 2.38487802e+08 B/op 1.70067e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item1000/Count100000-12 6 1.76898125e+08 ns/op 2.38486013e+08 B/op 1.700649e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10-12 580 2.042736e+06 ns/op 1.085598e+06 B/op 259 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10-12 582 2.074931e+06 ns/op 1.085607e+06 B/op 259 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10-12 590 2.03579e+06 ns/op 1.085592e+06 B/op 259 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10-12 590 2.092167e+06 ns/op 1.085592e+06 B/op 259 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100-12 79 1.4837651e+07 ns/op 1.0798579e+07 B/op 1857 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100-12 86 1.4949565e+07 ns/op 1.0798585e+07 B/op 1857 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100-12 75 1.4838974e+07 ns/op 1.079858e+07 B/op 1856 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100-12 79 1.4715528e+07 ns/op 1.0798654e+07 B/op 1857 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count1000-12 8 1.34558182e+08 ns/op 1.07878618e+08 B/op 17256 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count1000-12 8 1.31736005e+08 ns/op 1.07878932e+08 B/op 17258 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count1000-12 8 1.3482249e+08 ns/op 1.07878672e+08 B/op 17253 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count1000-12 8 1.33197505e+08 ns/op 1.07878704e+08 B/op 17256 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10000-12 1 1.277907708e+09 ns/op 1.078624904e+09 B/op 170496 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10000-12 1 1.271696417e+09 ns/op 1.078625208e+09 B/op 170482 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10000-12 1 1.267900791e+09 ns/op 1.0786186e+09 B/op 170414 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count10000-12 1 1.271162292e+09 ns/op 1.078627288e+09 B/op 170511 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100000-12 1 1.249082275e+10 ns/op 1.0785725816e+10 B/op 1.700745e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100000-12 1 1.2448243167e+10 ns/op 1.0785729928e+10 B/op 1.700778e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100000-12 1 1.2359594292e+10 ns/op 1.078573228e+10 B/op 1.70081e+06 allocs/op
+BenchmarkMerkleCommit/sumhash/Item100000/Count100000-12 1 1.2223900792e+10 ns/op 1.0785727256e+10 B/op 1.700752e+06 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10-12 154110 7485 ns/op 5511 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10-12 160881 7771 ns/op 5511 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10-12 159609 7548 ns/op 5511 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10-12 158750 7782 ns/op 5511 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100-12 32126 37188 ns/op 33502 B/op 759 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100-12 32030 38789 ns/op 33490 B/op 759 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100-12 32210 37322 ns/op 33501 B/op 759 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100-12 29740 38503 ns/op 33501 B/op 759 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count1000-12 6242 196182 ns/op 296330 B/op 7086 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count1000-12 6274 202221 ns/op 296331 B/op 7086 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count1000-12 5989 198141 ns/op 296334 B/op 7086 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count1000-12 5800 201155 ns/op 296315 B/op 7086 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10000-12 1149 1.037881e+06 ns/op 2.91432e+06 B/op 70173 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10000-12 1148 1.061652e+06 ns/op 2.914278e+06 B/op 70172 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10000-12 1138 1.045849e+06 ns/op 2.914393e+06 B/op 70174 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count10000-12 1154 1.05805e+06 ns/op 2.914262e+06 B/op 70172 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100000-12 183 6.648069e+06 ns/op 2.8855861e+07 B/op 700270 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100000-12 174 6.650794e+06 ns/op 2.8855926e+07 B/op 700270 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100000-12 180 6.719909e+06 ns/op 2.8855724e+07 B/op 700268 allocs/op
+BenchmarkMerkleCommit/sha256/Item10/Count100000-12 180 6.664349e+06 ns/op 2.8855759e+07 B/op 700269 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10-12 75621 14538 ns/op 15648 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10-12 85160 14295 ns/op 15649 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10-12 81910 14600 ns/op 15647 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10-12 85662 14574 ns/op 15648 B/op 107 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100-12 16158 70644 ns/op 134524 B/op 761 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100-12 17343 71547 ns/op 134519 B/op 761 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100-12 16741 70695 ns/op 134514 B/op 761 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100-12 16794 70527 ns/op 134525 B/op 761 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count1000-12 2988 409621 ns/op 1.305312e+06 B/op 7095 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count1000-12 3006 403342 ns/op 1.305353e+06 B/op 7095 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count1000-12 3010 410351 ns/op 1.305302e+06 B/op 7095 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count1000-12 2992 402686 ns/op 1.305344e+06 B/op 7095 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10000-12 421 2.639025e+06 ns/op 1.2994833e+07 B/op 70177 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10000-12 453 2.511359e+06 ns/op 1.2994876e+07 B/op 70178 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10000-12 441 2.760775e+06 ns/op 1.2994906e+07 B/op 70178 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count10000-12 447 2.550414e+06 ns/op 1.2994896e+07 B/op 70178 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100000-12 50 2.3904968e+07 ns/op 1.29655791e+08 B/op 700267 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100000-12 50 2.3572e+07 ns/op 1.29656047e+08 B/op 700269 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100000-12 49 2.3366614e+07 ns/op 1.29655843e+08 B/op 700267 allocs/op
+BenchmarkMerkleCommit/sha256/Item1000/Count100000-12 48 2.4091605e+07 ns/op 1.29655862e+08 B/op 700267 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10-12 5238 230079 ns/op 1.071221e+06 B/op 115 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10-12 5131 233582 ns/op 1.071224e+06 B/op 115 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10-12 5144 230901 ns/op 1.071234e+06 B/op 115 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10-12 5188 235714 ns/op 1.071224e+06 B/op 115 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100-12 820 1.474248e+06 ns/op 1.0683667e+07 B/op 779 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100-12 802 1.484015e+06 ns/op 1.0683638e+07 B/op 779 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100-12 825 1.45369e+06 ns/op 1.0683661e+07 B/op 779 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100-12 818 1.505397e+06 ns/op 1.0683652e+07 B/op 779 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count1000-12 82 1.401679e+07 ns/op 1.06779257e+08 B/op 7107 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count1000-12 79 1.412341e+07 ns/op 1.0677921e+08 B/op 7107 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count1000-12 85 1.4121122e+07 ns/op 1.06779243e+08 B/op 7107 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count1000-12 84 1.4265123e+07 ns/op 1.06779033e+08 B/op 7105 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10000-12 8 1.29224833e+08 ns/op 1.067725248e+09 B/op 70221 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10000-12 8 1.33395e+08 ns/op 1.067726504e+09 B/op 70232 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10000-12 8 1.32093396e+08 ns/op 1.067725572e+09 B/op 70221 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count10000-12 8 1.30302364e+08 ns/op 1.067724218e+09 B/op 70210 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100000-12 1 1.157114667e+09 ns/op 1.0676910504e+10 B/op 700398 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100000-12 1 1.126537042e+09 ns/op 1.0676915992e+10 B/op 700468 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100000-12 1 1.148549125e+09 ns/op 1.0676922392e+10 B/op 700520 allocs/op
+BenchmarkMerkleCommit/sha256/Item100000/Count100000-12 1 1.129470334e+09 ns/op 1.0676934632e+10 B/op 700655 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/bookkeeping
+
+BenchmarkAppendMsgBlockHeader-12 33638108 35.58 ns/op 28.11 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-12 33784338 35.91 ns/op 27.85 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-12 33772255 35.58 ns/op 28.1 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-12 33781009 35.88 ns/op 27.87 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions
+
+BenchmarkAppendMsgSignedTxn-12 14239830 75.67 ns/op 13.22 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-12 16023321 74.9 ns/op 13.35 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-12 16041288 75.39 ns/op 13.26 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-12 15529566 74.91 ns/op 13.35 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions/verify
+
+BenchmarkPaysetGroups-12 235470 5732 ns/op 128213 B/op 8 allocs/op
+BenchmarkPaysetGroups-12 243314 5743 ns/op 133134 B/op 8 allocs/op
+BenchmarkPaysetGroups-12 242343 5744 ns/op 132555 B/op 8 allocs/op
+BenchmarkPaysetGroups-12 243602 5652 ns/op 133474 B/op 8 allocs/op
+BenchmarkTxn-12 29272 41174 ns/op 9502 B/op 12 allocs/op
+BenchmarkTxn-12 29242 41398 ns/op 9508 B/op 12 allocs/op
+BenchmarkTxn-12 29406 40847 ns/op 9502 B/op 12 allocs/op
+BenchmarkTxn-12 29407 40842 ns/op 9507 B/op 12 allocs/op
+
+pkg: github.com/algorand/go-algorand/data
+
+BenchmarkTxHandlerProcessing/processDecoded-12 119160 10138 ns/op 3896 B/op 44 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-12 117074 10071 ns/op 3896 B/op 44 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-12 116626 10101 ns/op 3896 B/op 44 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-12 116220 10057 ns/op 3896 B/op 44 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-12 29061 41432 ns/op 11712 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-12 28665 41652 ns/op 11712 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-12 29008 41257 ns/op 11712 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-12 28491 41256 ns/op 11712 B/op 16 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger
+
+BenchmarkCompactDeltas/account-deltas-12 913 1.573739e+06 ns/op 4.161392e+06 B/op 17 allocs/op
+BenchmarkCompactDeltas/account-deltas-12 876 1.401257e+06 ns/op 4.180033e+06 B/op 18 allocs/op
+BenchmarkCompactDeltas/account-deltas-12 891 1.399754e+06 ns/op 4.172284e+06 B/op 18 allocs/op
+BenchmarkCompactDeltas/account-deltas-12 883 1.392535e+06 ns/op 4.176389e+06 B/op 18 allocs/op
