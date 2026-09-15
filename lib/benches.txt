@@ -5,9 +5,21 @@ BenchmarkTxn
 BenchmarkPaysetGroups
 BenchmarkCompactDeltas
 BenchmarkTxHandlerProcessing
-BenchmarkMerkleCommit
+BenchmarkMerkleCommit/sha512_256
 BenchmarkAppendMsgSignedTxn
 BenchmarkAppendMsgBlockHeader
+#
+# MerkleCommit is restricted to one hash family. The benchmark builds a 3 x 5 x 5
+# grid (sha256, sha512_256, sumhash) x Item x Count, and all 45 series move
+# together: the only step in the 20-tag archive is -28% at v3.27.0, and it shows
+# up in every one of them. sha512_256 is what the ledger's merkle trees use;
+# sumhash belongs to state proofs and could in principle move on its own, so add
+# it back if that becomes interesting. The three families cost 93s, 26s and 93s
+# at -count=1, so this is also most of the run time of a session.
+#
+# benchspotter discovers one sub-benchmark level, so `MerkleCommit/sha512_256`
+# selects a family but `MerkleCommit/sha512_256/Item1000/Count1000` matches
+# nothing: the Item/Count grid comes as a block.
 #
 # Deliberately absent. benchspotter abandons the rest of a session when one
 # package's `go test` fails, so a benchmark that fails costs the whole run:

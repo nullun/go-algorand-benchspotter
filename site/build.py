@@ -104,7 +104,13 @@ def build(store, out):
             for unit in sorted(units.get(name, ()))
         }
 
+    # A series that no longer runs (MerkleCommit/sha256, say) still has years of
+    # history worth reading, so keep it and let the page label it.
+    retired = sorted(n for n in names if series[n] and
+                     all(vals[-1] is None for vals in series[n].values()))
+
     data = {
+        "retired": retired,
         "generated": datetime.now(tz=timezone.utc).isoformat(timespec="seconds"),
         "sessions": [{k: v for k, v in s.items() if k != "results"} for s in sessions],
         "series": series,

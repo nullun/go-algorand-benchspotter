@@ -66,9 +66,11 @@ the source. The nightly job calls that workflow directly, because a push made wi
 ## Reading the numbers
 
 The archive in `.benchspotter` is 60 sessions: 20 `vX.Y.Z-stable` tags (v3.24.0 to v5.0.1,
-2024-05 to 2026-08) x 3 runs, `-count=4`, all on one idle Apple M2 Pro on 2026-09-14. Run-to-run
-spread inside a single tag is the yardstick for whether a step between tags means anything;
-`MerkleCommit` varies by tens of percent between runs, `AppendMsg*` by well under one.
+2024-05 to 2026-08) x 3 runs, `-count=4`, all on one Apple M2 Pro on 2026-09-14. Run-to-run
+spread inside a single tag is the yardstick for whether a step between tags means anything, and
+in this archive it is not constant: the first six tags ran while the machine was in use and
+`MerkleCommit` moves 7-25% between repeats of the same tag there, against 0.3-2.5% for the last
+six, which ran overnight. Read nothing into a step smaller than the spread of its own tag.
 
 Known artefacts, both worth checking before believing a jump:
 
@@ -78,6 +80,10 @@ Known artefacts, both worth checking before believing a jump:
   pins it to the Go implementation, which is what algod has defaulted to since v4.4.1. The v3 and
   v4 sessions in the archive predate the patch and are mostly libsodium numbers, so they are not
   comparable to production and not comparable to each other tag by tag.
+- `MerkleCommit` is recorded for `sha512_256` only from 2026-09-15 on. The benchmark's
+  3 x 5 x 5 grid of hash x Item x Count produced 45 series that all moved together, and cost
+  most of the run time of a session. The `sha256` and `sumhash` series stay in the archive and
+  the site marks them as no longer recorded.
 - `AppendMsgBlockHeader` steps +14% at v4.2.1 because msgp_gen was regenerated for a larger block
   header, not because anything got slower. `AppendMsgSignedTxn` is flat across the same commit,
   which is how you can tell.

@@ -170,7 +170,9 @@ function fillBenchmarks() {
   const q = $("filter").value.toLowerCase();
   const keep = Object.keys(DATA.series).filter(n => n.toLowerCase().includes(q));
   const current = $("bench").value;
-  $("bench").innerHTML = keep.map(n => `<option${n === current ? " selected" : ""}>${n}</option>`).join("");
+  const retired = new Set(DATA.retired || []);
+  $("bench").innerHTML = keep.map(n =>
+    `<option value="${n}"${n === current ? " selected" : ""}>${n}${retired.has(n) ? "  (no longer recorded)" : ""}</option>`).join("");
   if (!keep.includes(current) && keep.length) $("bench").value = keep[0];
   fillMetrics();
 }
@@ -184,12 +186,16 @@ function fillMetrics() {
 
 fetch("data.json").then(r => r.json()).then(data => {
   DATA = data;
-  const machines = [...new Set(data.sessions.map(s => `${s.cpu} (${s.platform})`))];
   $("sub").textContent =
     `${data.sessions.length} sessions, ${Object.keys(data.series).length} benchmarks, ` +
-    `built ${data.generated.slice(0, 16).replace("T", " ")} UTC. ${machines.join(" / ")}.`;
+    `built ${data.generated.slice(0, 16).replace("T", " ")} UTC. ` +
+    `Hover a point for the commit and the machine that ran it; only compare sessions ` +
+    `sharing a runner tag.`;
 
-  const tags = [...new Set(data.sessions.flatMap(s => s.tags))].sort();
+  // runN only says which repeat of a set a session was, which the tooltip and the
+  // session name already carry; as a filter it is noise.
+  const tags = [...new Set(data.sessions.flatMap(s => s.tags))]
+    .filter(t => !/^run\d+$/.test(t)).sort();
   $("tags").innerHTML = "<span class=\"meta\">tags:</span>" + tags.map(t =>
     `<label><input type="checkbox" value="${t}"> ${t}</label>`).join("");
   $("tags").addEventListener("change", e => {
