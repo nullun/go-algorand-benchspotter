@@ -12,6 +12,14 @@ on:
       - '.github/workflows/pages.yml'
   workflow_dispatch:
   workflow_call:
+    inputs:
+      ref:
+        description: >
+          Commit to build the site from. A caller that has just pushed results
+          must pass the pushed sha: this run's github.sha was fixed before that
+          commit existed, so the default checkout builds the tree without it.
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -26,7 +34,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Empty ref means github.sha, the checkout default.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
       - uses: astral-sh/setup-uv@v5
       - run: uv run site/build.py
       - uses: actions/upload-pages-artifact@v3

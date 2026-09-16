@@ -1,0 +1,83 @@
+name: releases
+
+# Benchmarks any go-algorand *-stable tag that has no release session yet, and
+# commits the sessions to this repo. The nightly job tracks master; this one is
+# what puts the release points on the trend site. run-sweep.sh does the skipping
+# (SKIP_IF_DONE), so a day with no new release is a no-op that costs a checkout.
+
+on:
+  schedule:
+    # 10:00 UTC, well clear of the 02:00 nightly. Upstream publishes releases
+    # around 14:30 UTC, so a tag cut today is measured tomorrow morning.
+    - cron: '0 10 * * *'
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'space-separated tags to benchmark (default: every unmeasured stable tag)'
+        default: ''
+      runs:
+        description: sessions to record per tag
+        default: '3'
+      force:
+        description: benchmark even if the tag already has a release session
+        type: boolean
+        default: false
+
+concurrency:
+  # Shared with nightly: never two benchmark runs on one machine at the same time.
+  group: benchmark-runner
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
+    # A tag is ~22 minutes and a backlog is benchmarked in one go, so this needs
+    # more headroom than the nightly.
+    timeout-minutes: 720
+    permissions:
+      contents: write
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/bench-setup
+
+      - name: Benchmark
+        env:
+          RUNS: ${{ github.event.inputs.runs || '3' }}
+          RUNNER: runner:${{ vars.BENCH_RUNNER || 'github-hosted' }}
+          SKIP_IF_DONE: ${{ github.event.inputs.force == 'true' && '0' || '1' }}
+          # Through the environment, not interpolated into the script body: a
+          # dispatch input is attacker-controlled shell otherwise.
+          TAGS: ${{ github.event.inputs.tags }}
+        # Unquoted on purpose: TAGS is a space-separated list, empty means "all".
+        run: ./run-sweep.sh $TAGS
+
+      - name: Commit results
+        id: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .benchspotter
+          if git diff --cached --quiet; then
+            echo "no new sessions"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "releases: $(date -u +%Y-%m-%d) go-algorand stable tags"
+          git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  pages:
+    needs: sweep
+    if: needs.sweep.outputs.committed == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      ref: ${{ needs.sweep.outputs.sha }}

@@ -30,18 +30,31 @@ go.mod toolchain directive of the ref under test decides the Go that actually co
     ./run-sweep.sh                        # every stable tag, oldest first, ~22 min each
     ./run-sweep.sh v5.0.0-stable v5.0.1-stable
 
-Both take `RUNS`, `COUNT`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT` and `REMOTE`; the header of each
-script lists them. Results go to `.benchspotter` unless `BENCHSPOTTER_PATH` says otherwise.
+Both take `RUNS`, `COUNT`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT`, `REMOTE` and `SKIP_IF_DONE`; the
+header of each script lists them. `SKIP_IF_DONE=1` is the default and drops work that is already
+in the store: a commit with a `nightly` session, a tag with a `release` session. Pass
+`SKIP_IF_DONE=0` to measure something a second time. Results go to `.benchspotter` unless
+`BENCHSPOTTER_PATH` says otherwise.
 
     benchspotter trend --tag run1         # one clean series per release
     benchspotter trend --tag nightly
     benchspotter session ls
 
-## The nightly job
+## The scheduled jobs
 
 `.github/workflows/nightly.yml` runs at 02:00 UTC, benchmarks whatever `origin/master` points
 at, commits the sessions and triggers the site rebuild. It exits without benchmarking if that
 commit already has a nightly session, so a quiet day costs nothing.
+
+`.github/workflows/releases.yml` runs at 10:00 UTC and does the same for every `*-stable` tag
+that has no `release` session yet, which is how a new upstream release reaches the site. Most
+days it finds nothing and stops after the checkout. Both share the `benchmark-runner`
+concurrency group, so they queue behind each other rather than fighting over one machine, and
+both get their toolchain from `.github/actions/bench-setup`.
+
+Each job passes the sha it just pushed to `pages.yml`. Without that the site would build from
+`github.sha`, which is fixed before the results commit exists, and every build would be one
+night behind.
 
 The runner matters more than anything else in this repo. Set the `BENCH_RUNNER` repository
 variable to a self-hosted label on a machine you control and that is otherwise idle at 02:00.
@@ -60,13 +73,16 @@ standard library only and does not need the benchspotter binary.
     uv run site/build.py && open site/dist/index.html
 
 `.github/workflows/pages.yml` publishes it. Enable Pages for the repo with "GitHub Actions" as
-the source. The nightly job calls that workflow directly, because a push made with
-`GITHUB_TOKEN` does not trigger other workflows.
+the source, and give Actions write permission to contents (Settings > Actions > General) or the
+results commit cannot be pushed. The benchmark jobs call the pages workflow directly, because a
+push made with `GITHUB_TOKEN` does not trigger other workflows.
 
 ## Reading the numbers
 
-The archive in `.benchspotter` is 60 sessions: 20 `vX.Y.Z-stable` tags (v3.24.0 to v5.0.1,
-2024-05 to 2026-08) x 3 runs, `-count=4`, all on one Apple M2 Pro on 2026-09-14. Run-to-run
+The release archive in `.benchspotter` is 60 sessions: 20 `vX.Y.Z-stable` tags (v3.24.0 to
+v5.0.1, 2024-05 to 2026-08) x 3 runs, `-count=4`, all on one Apple M2 Pro on 2026-09-14. The
+scheduled jobs add to it from whatever runner they land on, which is why every session carries a
+`runner:` tag. Run-to-run
 spread inside a single tag is the yardstick for whether a step between tags means anything, and
 in this archive it is not constant: the first six tags ran while the machine was in use and
 `MerkleCommit` moves 7-25% between repeats of the same tag there, against 0.3-2.5% for the last

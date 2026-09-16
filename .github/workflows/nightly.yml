@@ -36,47 +36,25 @@ jobs:
     # beyond "did it still build and run".
     runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 240
+    permissions:
+      contents: write
     outputs:
       committed: ${{ steps.commit.outputs.committed }}
+      sha: ${{ steps.commit.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.x'
-          # The go.mod toolchain directive of the ref under test wins anyway
-          # (TOOLCHAIN=pinned), this is just a bootstrap Go.
-          cache: false
-
-      - name: Settings
-        run: |
-          # Outside the workspace, so a self-hosted runner keeps the go-algorand
-          # clone and the Go build cache between nights. The first run is the slow one.
-          echo "CHECKOUT=$HOME/.cache/go-algorand-bench/checkout" >> "$GITHUB_ENV"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          mkdir -p "$HOME/.local/bin"
-
-      - name: Install jq
-        run: |
-          command -v jq && exit 0
-          if command -v brew; then brew install jq
-          else sudo apt-get update && sudo apt-get install -y jq; fi
-
-      - name: Build benchspotter
-        run: |
-          # `go install @latest` fails on a replace directive in its go.mod.
-          src="$RUNNER_TEMP/benchspotter"
-          rm -rf "$src"
-          git clone --quiet --depth 1 https://github.com/MichaelMure/benchspotter "$src"
-          (cd "$src" && go build -o "$HOME/.local/bin/benchspotter" .)
-          benchspotter --version
+      - uses: ./.github/actions/bench-setup
 
       - name: Benchmark
         env:
           RUNS: ${{ github.event.inputs.runs || '3' }}
           RUNNER: runner:${{ vars.BENCH_RUNNER || 'github-hosted' }}
           SKIP_IF_DONE: ${{ github.event.inputs.force == 'true' && '0' || '1' }}
-        run: ./run-nightly.sh "${{ github.event.inputs.ref || 'origin/master' }}"
+          # Through the environment, not interpolated into the script body: a
+          # dispatch input is attacker-controlled shell otherwise.
+          REF: ${{ github.event.inputs.ref || 'origin/master' }}
+        run: ./run-nightly.sh "$REF"
 
       - name: Commit results
         id: commit
@@ -92,6 +70,10 @@ jobs:
           git commit -m "nightly: $(date -u +%Y-%m-%d) go-algorand $(git -C "$CHECKOUT" rev-parse --short HEAD)"
           git push
           echo "committed=true" >> "$GITHUB_OUTPUT"
+          # The site build has to be pointed at this commit by hand: it is created
+          # after the run's own github.sha was fixed, so a plain checkout in the
+          # called workflow would build the tree from before tonight's results.
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   # A push made with GITHUB_TOKEN does not trigger other workflows, so the site
   # rebuild has to be called from here rather than left to pages.yml's push trigger.
@@ -103,3 +85,5 @@ jobs:
       pages: write
       id-token: write
     uses: ./.github/workflows/pages.yml
+    with:
+      ref: ${{ needs.bench.outputs.sha }}

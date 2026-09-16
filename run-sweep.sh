@@ -20,6 +20,8 @@
 #                 UP to a newer toolchain, never down. Only "pinned" gives per-release toolchains.
 #   BENCHES       space-separated benchmark regexps (default: the set in lib/benches.txt)
 #   RUNNER        label recorded as a session tag (default: runner:$(hostname -s))
+#   SKIP_IF_DONE  1 (default) drops tags that already have a release session; 0 benchmarks
+#                 them again. Applies to an explicit tag list too.
 #
 # The sweep runs `git clean -xfdq` and `git checkout --detach` inside $CHECKOUT,
 # which it owns. This repo is only written to under $BENCHSPOTTER_PATH.
@@ -33,6 +35,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 COUNT="${COUNT:-4}"
 RUNS="${RUNS:-3}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
+SKIP_IF_DONE="${SKIP_IF_DONE:-1}"
 BENCHES="${BENCHES:-$(grep -v '^#' lib/benches.txt | tr '\n' ' ')}"
 
 bs_preflight || exit 1
@@ -57,6 +60,29 @@ else
       TAGS+=("$t")
     fi
   done < <(git -C "$CHECKOUT" for-each-ref --sort=creatordate --format='%(refname:short)' refs/tags | grep -- '-stable$')
+fi
+
+# A sweep is ~22 minutes a tag, so re-measuring a tag that already has a release
+# session is the expensive mistake here, not skipping one. The nightly job makes
+# the same check against its own commit; see SKIP_IF_DONE in run-nightly.sh.
+if [ "$SKIP_IF_DONE" = 1 ] && [ ${#TAGS[@]} -gt 0 ]; then
+  DONE="$(benchspotter session ls -f json 2>/dev/null \
+    | jq -r '[.[] | select(.tags | index("release")) | .name] | unique[]?')"
+  KEEP=()
+  for t in "${TAGS[@]}"; do
+    if grep -qxF "$t" <<<"$DONE"; then
+      echo "already benchmarked, skipping: $t"
+    else
+      KEEP+=("$t")
+    fi
+  done
+  # bash 3.2 (macOS /bin/bash) treats "${KEEP[@]}" on an empty array as unset.
+  TAGS=(${KEEP[@]+"${KEEP[@]}"})
+fi
+
+if [ ${#TAGS[@]} -eq 0 ]; then
+  echo "nothing to benchmark"
+  exit 0
 fi
 
 BENCH_ARGS=()
