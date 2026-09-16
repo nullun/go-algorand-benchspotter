@@ -77,29 +77,42 @@ the source, and give Actions write permission to contents (Settings > Actions > 
 results commit cannot be pushed. The benchmark jobs call the pages workflow directly, because a
 push made with `GITHUB_TOKEN` does not trigger other workflows.
 
+## The M2 Pro archive
+
+`main` carries only what GitHub Actions measured, starting 2026-09-16. The sweep that started
+this repo - 20 `vX.Y.Z-stable` tags (v3.24.0 to v5.0.1, 2024-05 to 2026-08) x 3 runs,
+`-count=4`, one Apple M2 Pro, 2026-09-14 - is frozen on the `archive/macbook-sweep` branch.
+
+    git switch archive/macbook-sweep
+    benchspotter trend --tag run1
+    uv run site/build.py && open site/dist/index.html
+
+It is a separate branch rather than 60 more sessions in one store because the two were measured
+on different hardware. Same benchmarks, same commits, different ns/op: a line drawn from the
+laptop series into the hosted series steps at the handover, and the step is the machine. Neither
+set is wrong, they are just not one series. The archive is what says which changes upstream made
+over two years; `main` is what will say what changes from here.
+
 ## Reading the numbers
 
-The release archive in `.benchspotter` is 60 sessions: 20 `vX.Y.Z-stable` tags (v3.24.0 to
-v5.0.1, 2024-05 to 2026-08) x 3 runs, `-count=4`, all on one Apple M2 Pro on 2026-09-14. The
-scheduled jobs add to it from whatever runner they land on, which is why every session carries a
-`runner:` tag. Run-to-run
-spread inside a single tag is the yardstick for whether a step between tags means anything, and
-in this archive it is not constant: the first six tags ran while the machine was in use and
-`MerkleCommit` moves 7-25% between repeats of the same tag there, against 0.3-2.5% for the last
-six, which ran overnight. Read nothing into a step smaller than the spread of its own tag.
+Run-to-run spread inside a single point is the yardstick for whether a step between points means
+anything, and it is not constant: in the M2 Pro archive the first six tags ran while the machine
+was in use and `MerkleCommit` moves 7-25% between repeats of the same tag there, against 0.3-2.5%
+for the six that ran overnight. A shared GitHub runner is noisier again. Read nothing into a step
+smaller than the spread of its own point, which the site draws as the band around the line.
 
-Known artefacts, both worth checking before believing a jump:
+Known artefacts, all worth checking before believing a jump:
 
 - `data/transactions/verify/txn_test.go` has picked the ed25519 batch verifier on a coin toss in
   `init()` since v5.0.0 (commit a7a983998f). Pure-Go ed25519consensus is about 26us per
   `BenchmarkTxn` op with 6 allocs, libsodium cgo about 41us with 8. `patches/pin-ed25519-verifier.sh`
   pins it to the Go implementation, which is what algod has defaulted to since v4.4.1. The v3 and
-  v4 sessions in the archive predate the patch and are mostly libsodium numbers, so they are not
-  comparable to production and not comparable to each other tag by tag.
+  v4 sessions in the M2 Pro archive predate the patch and are mostly libsodium numbers, so they
+  are not comparable to production and not comparable to each other tag by tag.
 - `MerkleCommit` is not recorded from 2026-09-15 on. Its 3 x 5 x 5 grid of hash family x Item x
   Count produced 45 of the 52 series in the archive, they all moved together, and they were most
-  of the run time of a session. The archived series stay readable and the site marks them as no
+  of the run time of a session. The archive branch still has them and its site marks them as no
   longer recorded; `lib/benches.txt` says how to bring them back.
-- `AppendMsgBlockHeader` steps +14% at v4.2.1 because msgp_gen was regenerated for a larger block
-  header, not because anything got slower. `AppendMsgSignedTxn` is flat across the same commit,
-  which is how you can tell.
+- `AppendMsgBlockHeader` steps +14% at v4.2.1 in the archive because msgp_gen was regenerated for
+  a larger block header, not because anything got slower. `AppendMsgSignedTxn` is flat across the
+  same commit, which is how you can tell.

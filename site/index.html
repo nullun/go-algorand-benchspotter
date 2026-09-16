@@ -133,7 +133,10 @@ function draw() {
   const chart = $("chart");
 
   if (points.length < 2) {
-    chart.innerHTML = '<p class="empty">not enough sessions with this benchmark and these tags</p>';
+    // One night is one point: the repeats of a commit combine. A fresh store
+    // draws nothing until a second commit has been benchmarked.
+    chart.innerHTML = `<p class="empty">${points.length ? "only one point so far" : "no sessions"} ` +
+      `with this benchmark and these tags; a trend needs two</p>`;
     $("chartmeta").textContent = "";
     return;
   }
@@ -225,11 +228,14 @@ function fillMetrics() {
 
 fetch("data.json").then(r => r.json()).then(data => {
   DATA = data;
-  $("sub").textContent =
+  $("sub").innerHTML =
     `${data.sessions.length} sessions, ${Object.keys(data.series).length} benchmarks, ` +
     `built ${data.generated.slice(0, 16).replace("T", " ")} UTC. ` +
     `Hover a point for the commit and the machine that ran it; only compare sessions ` +
-    `sharing a runner tag.`;
+    `sharing a runner tag. The 2024-2026 release sweep that predates these runs was ` +
+    `measured on other hardware and is kept on the ` +
+    `<a href="https://github.com/nullun/go-algorand-benchspotter/tree/archive/macbook-sweep">` +
+    `archive/macbook-sweep</a> branch.`;
 
   // runN only says which repeat of a set a session was, and repeats are combined
   // into one point anyway; as a filter it is noise.
