@@ -27,8 +27,9 @@
   select, input { font: inherit; padding: 5px 7px; border: 1px solid var(--line);
                   border-radius: 5px; background: var(--bg); color: var(--fg); }
   select { max-width: 460px; }
-  .tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 13px; }
-  .tags label { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--fg); }
+  .toggles { display: flex; gap: 10px; }
+  .toggles label { display: inline-flex; align-items: center; gap: 4px; margin: 0; color: var(--fg); }
+  [hidden] { display: none !important; }
   svg { width: 100%; height: auto; display: block; }
   .grid { stroke: var(--line); stroke-width: 1; }
   .axis { fill: var(--muted); font-size: 11px; }
@@ -69,8 +70,18 @@
         <label for="group">repeats</label>
         <label style="color: var(--fg)"><input id="group" type="checkbox" checked> combine</label>
       </div>
+      <div id="kinds" hidden>
+        <label>show</label>
+        <div class="toggles">
+          <label><input type="checkbox" value="release" checked> releases</label>
+          <label><input type="checkbox" value="nightly" checked> nightlies</label>
+        </div>
+      </div>
+      <div id="runners" hidden>
+        <label for="runner">runner</label>
+        <select id="runner"></select>
+      </div>
     </div>
-    <div class="tags" id="tags"></div>
   </div>
 
   <div class="panel">
@@ -83,7 +94,7 @@
 <script>
 const $ = id => document.getElementById(id);
 const tip = $("tip");
-let DATA, SELECTED = new Set();
+let DATA;
 
 const UNITS = {
   "ns/op":     v => v >= 1e9 ? (v/1e9).toFixed(2)+" s"  : v >= 1e6 ? (v/1e6).toFixed(2)+" ms"
@@ -98,10 +109,17 @@ const median = xs => {
 };
 const runnerOf = s => s.tags.find(t => t.startsWith("runner:")) || "runner:?";
 
+// Sessions are either a release or a nightly; the toggles pick which kinds to
+// plot. The runner select only appears once more than one machine has
+// contributed, since points from different hardware never belong on one line.
 function visibleSessions() {
-  if (!SELECTED.size) return DATA.sessions.map((s, i) => i);
-  return DATA.sessions.map((s, i) => i)
-    .filter(i => DATA.sessions[i].tags.some(t => SELECTED.has(t)));
+  const kinds = new Set([...$("kinds").querySelectorAll("input:checked")].map(i => i.value));
+  const runner = $("runner").value;
+  return DATA.sessions.map((s, i) => i).filter(i => {
+    const s = DATA.sessions[i];
+    const kind = s.tags.find(t => t === "release" || t === "nightly");
+    return (!kind || kinds.has(kind)) && (!runner || runnerOf(s) === runner);
+  });
 }
 
 // One x position per commit per machine. The repeats of a set (RUNS=3) are
@@ -231,22 +249,17 @@ fetch("data.json").then(r => r.json()).then(data => {
   $("sub").innerHTML =
     `${data.sessions.length} sessions, ${Object.keys(data.series).length} benchmarks, ` +
     `built ${data.generated.slice(0, 16).replace("T", " ")} UTC. ` +
-    `Hover a point for the commit and the machine that ran it; only compare sessions ` +
-    `sharing a runner tag. The 2024-2026 release sweep that predates these runs was ` +
-    `measured on other hardware and is kept on the ` +
-    `<a href="https://github.com/nullun/go-algorand-benchspotter/tree/archive/macbook-sweep">` +
-    `archive/macbook-sweep</a> branch.`;
+    `Hover a point for the commit and the machine that ran it.`;
 
-  // runN only says which repeat of a set a session was, and repeats are combined
-  // into one point anyway; as a filter it is noise.
-  const tags = [...new Set(data.sessions.flatMap(s => s.tags))]
-    .filter(t => !/^run\d+$/.test(t)).sort();
-  $("tags").innerHTML = "<span class=\"meta\">tags:</span>" + tags.map(t =>
-    `<label><input type="checkbox" value="${t}"> ${t}</label>`).join("");
-  $("tags").addEventListener("change", () => {
-    SELECTED = new Set([...$("tags").querySelectorAll("input:checked")].map(i => i.value));
-    draw();
-  });
+  // Both toggles are pointless until both kinds of session exist.
+  const kinds = new Set(data.sessions.flatMap(s => s.tags.filter(t => t === "release" || t === "nightly")));
+  $("kinds").hidden = kinds.size < 2;
+  $("kinds").addEventListener("change", draw);
+
+  const runners = [...new Set(data.sessions.map(runnerOf))].sort();
+  $("runner").innerHTML = runners.map(r => `<option>${r}</option>`).join("");
+  $("runners").hidden = runners.length < 2;
+  $("runner").addEventListener("change", draw);
 
   fillBenchmarks();
   if ($("bench").querySelector('option[value="BenchmarkTxn"]')) $("bench").value = "BenchmarkTxn";
