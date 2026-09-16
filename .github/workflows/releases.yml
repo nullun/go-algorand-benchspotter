@@ -4,6 +4,10 @@ name: releases
 # commits the sessions to this repo. The nightly job tracks master; this one is
 # what puts the release points on the trend site. run-sweep.sh does the skipping
 # (SKIP_IF_DONE), so a day with no new release is a no-op that costs a checkout.
+#
+# The first run on an empty store has every stable tag to do. MAX_TAGS caps a run
+# at six of them, oldest first, so the backlog clears over a few nights instead of
+# in one job that would run into the hosted 6-hour ceiling and commit nothing.
 
 on:
   schedule:
@@ -15,6 +19,9 @@ on:
       tags:
         description: 'space-separated tags to benchmark (default: every unmeasured stable tag)'
         default: ''
+      max_tags:
+        description: most tags to benchmark in this run, 0 for no limit
+        default: '6'
       runs:
         description: sessions to record per tag
         default: '3'
@@ -31,9 +38,11 @@ concurrency:
 jobs:
   sweep:
     runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
-    # A tag is ~22 minutes and a backlog is benchmarked in one go, so this needs
-    # more headroom than the nightly.
-    timeout-minutes: 720
+    # A GitHub-hosted job is killed at 6 hours whatever this says, and the results
+    # are only committed after the last tag, so a run that overruns loses every
+    # session it measured. MAX_TAGS keeps a run well inside the limit and
+    # SKIP_IF_DONE picks the backlog up again tomorrow.
+    timeout-minutes: 330
     permissions:
       contents: write
     outputs:
@@ -52,6 +61,7 @@ jobs:
           # Through the environment, not interpolated into the script body: a
           # dispatch input is attacker-controlled shell otherwise.
           TAGS: ${{ github.event.inputs.tags }}
+          MAX_TAGS: ${{ github.event.inputs.max_tags || '6' }}
         # Unquoted on purpose: TAGS is a space-separated list, empty means "all".
         run: ./run-sweep.sh $TAGS
 

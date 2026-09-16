@@ -22,6 +22,9 @@
 #   RUNNER        label recorded as a session tag (default: runner:$(hostname -s))
 #   SKIP_IF_DONE  1 (default) drops tags that already have a release session; 0 benchmarks
 #                 them again. Applies to an explicit tag list too.
+#   MAX_TAGS      benchmark at most this many tags and leave the rest (default 0, no limit).
+#                 With SKIP_IF_DONE=1 a backlog clears over as many runs as it takes, oldest
+#                 first, which is how a sweep fits under a CI job time limit.
 #
 # The sweep runs `git clean -xfdq` and `git checkout --detach` inside $CHECKOUT,
 # which it owns. This repo is only written to under $BENCHSPOTTER_PATH.
@@ -36,6 +39,7 @@ COUNT="${COUNT:-4}"
 RUNS="${RUNS:-3}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
 SKIP_IF_DONE="${SKIP_IF_DONE:-1}"
+MAX_TAGS="${MAX_TAGS:-0}"
 BENCHES="${BENCHES:-$(grep -v '^#' lib/benches.txt | tr '\n' ' ')}"
 
 bs_preflight || exit 1
@@ -83,6 +87,13 @@ fi
 if [ ${#TAGS[@]} -eq 0 ]; then
   echo "nothing to benchmark"
   exit 0
+fi
+
+# Oldest first, so a batched backlog still records sessions in tag order: the
+# trend view sorts by session creation time, not by commit date.
+if [ "$MAX_TAGS" -gt 0 ] && [ ${#TAGS[@]} -gt "$MAX_TAGS" ]; then
+  echo "${#TAGS[@]} tags to do, taking the oldest $MAX_TAGS this run"
+  TAGS=("${TAGS[@]:0:$MAX_TAGS}")
 fi
 
 BENCH_ARGS=()

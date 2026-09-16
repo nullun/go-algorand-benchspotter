@@ -48,9 +48,13 @@ commit already has a nightly session, so a quiet day costs nothing.
 
 `.github/workflows/releases.yml` runs at 10:00 UTC and does the same for every `*-stable` tag
 that has no `release` session yet, which is how a new upstream release reaches the site. Most
-days it finds nothing and stops after the checkout. Both share the `benchmark-runner`
-concurrency group, so they queue behind each other rather than fighting over one machine, and
-both get their toolchain from `.github/actions/bench-setup`.
+days it finds nothing and stops after the checkout. It takes at most `MAX_TAGS` (6) tags in one
+run, oldest first: a GitHub-hosted job is killed at 6 hours and nothing is committed until the
+last tag finishes, so a backlog is better cleared over several nights than lost in one long
+job. The 21 tags that `main` starts with take about four nights.
+
+Both share the `benchmark-runner` concurrency group, so they queue behind each other rather than
+fighting over one machine, and both get their toolchain from `.github/actions/bench-setup`.
 
 Each job passes the sha it just pushed to `pages.yml`. Without that the site would build from
 `github.sha`, which is fixed before the results commit exists, and every build would be one
