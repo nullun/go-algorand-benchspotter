@@ -1,0 +1,13 @@
+diff --git a/data/transactions/verify/txn_test.go b/data/transactions/verify/txn_test.go
+index 108924a0e..5d3cf6947 100644
+--- a/data/transactions/verify/txn_test.go
++++ b/data/transactions/verify/txn_test.go
+@@ -62,7 +62,7 @@ var spec = transactions.SpecialAddresses{
+ }
+ 
+ func init() {
+-	useEd25519Consensus := crypto.RandUint64()%2 == 0
++	useEd25519Consensus := true // pinned by benchspotter
+ 	fmt.Printf("Using Ed25519ConsensusBatchVerifier: %v\n", useEd25519Consensus)
+ 	crypto.SetEd25519BatchVerifier(useEd25519Consensus)
+ }
