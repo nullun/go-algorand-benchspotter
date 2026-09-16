@@ -1,0 +1,45 @@
+goos: linux
+goarch: amd64
+pkg: github.com/algorand/go-algorand/data/bookkeeping
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+
+BenchmarkAppendMsgBlockHeader-4 19036065 62.87 ns/op 15.9 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-4 19068186 63.6 ns/op 15.72 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-4 17689921 62.84 ns/op 15.91 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-4 18934818 62.74 ns/op 15.94 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions
+
+BenchmarkAppendMsgSignedTxn-4 8013222 152.5 ns/op 6.56 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-4 7956008 150.6 ns/op 6.64 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-4 7995601 151.3 ns/op 6.61 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-4 7920252 152.2 ns/op 6.57 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions/verify
+
+BenchmarkPaysetGroups-4 48598 26368 ns/op 32750 B/op 8 allocs/op
+BenchmarkPaysetGroups-4 48756 26159 ns/op 32853 B/op 8 allocs/op
+BenchmarkPaysetGroups-4 48896 26353 ns/op 32961 B/op 8 allocs/op
+BenchmarkPaysetGroups-4 48567 26255 ns/op 32504 B/op 8 allocs/op
+BenchmarkTxn-4 23596 51257 ns/op 9431 B/op 12 allocs/op
+BenchmarkTxn-4 23348 51019 ns/op 9430 B/op 12 allocs/op
+BenchmarkTxn-4 23209 51568 ns/op 9437 B/op 12 allocs/op
+BenchmarkTxn-4 23001 50811 ns/op 9435 B/op 12 allocs/op
+
+pkg: github.com/algorand/go-algorand/data
+
+BenchmarkTxHandlerProcessing/processDecoded-4 77743 14920 ns/op 3760 B/op 32 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-4 83565 14726 ns/op 3760 B/op 32 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-4 68060 15908 ns/op 3760 B/op 32 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-4 71401 16085 ns/op 3760 B/op 32 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-4 23468 51908 ns/op 11328 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-4 23373 51160 ns/op 11328 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-4 23235 51150 ns/op 11328 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-4 22838 52408 ns/op 11328 B/op 16 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger
+
+BenchmarkCompactDeltas/account-deltas-4 500 2.304475e+06 ns/op 4.096358e+06 B/op 0 allocs/op
+BenchmarkCompactDeltas/account-deltas-4 500 2.474741e+06 ns/op 4.096359e+06 B/op 0 allocs/op
+BenchmarkCompactDeltas/account-deltas-4 500 2.529447e+06 ns/op 4.096358e+06 B/op 0 allocs/op
+BenchmarkCompactDeltas/account-deltas-4 500 2.482531e+06 ns/op 4.096358e+06 B/op 0 allocs/op

@@ -1,0 +1,28 @@
+  [1/4]  bench  AppendMsgBlockHeader                  56.6 ns/op   17.7 MB/s   0.000 B/op   0.000 allocs/op
+  [2/4]  bench  AppendMsgBlockHeader                  57.1 ns/op   17.5 MB/s   0.000 B/op   0.000 allocs/op
+  [3/4]  bench  AppendMsgBlockHeader                  57.4 ns/op   17.4 MB/s   0.000 B/op   0.000 allocs/op
+  [4/4]  bench  AppendMsgBlockHeader                  57.6 ns/op ±1%   17.4 MB/s ±1%   0.000 B/op   0.000 allocs/op    3.81s
+  [1/4]  bench  AppendMsgSignedTxn                    142 ns/op   7.05 MB/s   0.000 B/op   0.000 allocs/op
+  [2/4]  bench  AppendMsgSignedTxn                    143 ns/op   6.97 MB/s   0.000 B/op   0.000 allocs/op
+  [3/4]  bench  AppendMsgSignedTxn                    142 ns/op   7.02 MB/s   0.000 B/op   0.000 allocs/op
+  [4/4]  bench  AppendMsgSignedTxn                    143 ns/op ±1%   7.01 MB/s ±1%   0.000 B/op   0.000 allocs/op    4.04s
+  [1/4]  bench  PaysetGroups                          29,506 ns/op   32,648 B/op   8.00 allocs/op
+  [2/4]  bench  PaysetGroups                          27,855 ns/op   32,794 B/op   8.00 allocs/op
+  [3/4]  bench  PaysetGroups                          27,236 ns/op   32,837 B/op   8.00 allocs/op
+  [4/4]  bench  PaysetGroups                          26,975 ns/op ±7%   32,844 B/op ±0%   8.00 allocs/op    12.18s
+  [1/4]  bench  Txn                                   50,801 ns/op   9,503 B/op   12.0 allocs/op
+  [2/4]  bench  Txn                                   50,978 ns/op   9,505 B/op   12.0 allocs/op
+  [3/4]  bench  Txn                                   51,004 ns/op   9,508 B/op   12.0 allocs/op
+  [4/4]  bench  Txn                                   50,987 ns/op ±0%   9,507 B/op ±0%   12.0 allocs/op    10.15s
+  [1/4]  bench  TxHandlerProcessing/processDecoded    18,413 ns/op   3,896 B/op   44.0 allocs/op
+  [2/4]  bench  TxHandlerProcessing/processDecoded    17,755 ns/op   3,896 B/op   44.0 allocs/op
+  [3/4]  bench  TxHandlerProcessing/processDecoded    17,274 ns/op   3,896 B/op   44.0 allocs/op
+  [4/4]  bench  TxHandlerProcessing/processDecoded    16,945 ns/op ±7%   3,896 B/op   44.0 allocs/op    8.31s
+  [1/4]  bench  TxHandlerProcessing/verify.TxnGroup   50,893 ns/op   11,712 B/op   16.0 allocs/op
+  [2/4]  bench  TxHandlerProcessing/verify.TxnGroup   50,866 ns/op   11,712 B/op   16.0 allocs/op
+  [3/4]  bench  TxHandlerProcessing/verify.TxnGroup   50,886 ns/op   11,712 B/op   16.0 allocs/op
+  [4/4]  bench  TxHandlerProcessing/verify.TxnGroup   51,051 ns/op ±1%   11,712 B/op   16.0 allocs/op    7.11s
+  [1/4]  bench  CompactDeltas/account-deltas          2,446,827 ns/op   4,123,000 B/op   16.0 allocs/op
+  [2/4]  bench  CompactDeltas/account-deltas          2,471,119 ns/op   4,123,000 B/op   16.0 allocs/op
+  [3/4]  bench  CompactDeltas/account-deltas          2,481,076 ns/op   4,123,000 B/op   16.0 allocs/op
+  [4/4]  bench  CompactDeltas/account-deltas          2,484,591 ns/op ±1%   4,123,000 B/op   16.0 allocs/op    8.94s
