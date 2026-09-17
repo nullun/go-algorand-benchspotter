@@ -50,6 +50,12 @@ jobs:
       needed: ${{ steps.check.outputs.needed }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The tip of main when this job starts, not the sha the run was
+          # triggered at: a run queued behind a long benchmark would otherwise
+          # read a store from before that benchmark pushed, measure the same
+          # commit again, and have its push rejected.
+          ref: main
       - id: check
         env:
           DISPATCH: ${{ github.event_name == 'workflow_dispatch' }}
@@ -85,6 +91,12 @@ jobs:
       sha: ${{ steps.commit.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The tip of main when this job starts, not the sha the run was
+          # triggered at: a run queued behind a long benchmark would otherwise
+          # read a store from before that benchmark pushed, measure the same
+          # commit again, and have its push rejected.
+          ref: main
 
       - uses: ./.github/actions/bench-setup
 
@@ -138,6 +150,8 @@ jobs:
             exit 0
           fi
           git commit -m "nightly: $(date -u +%Y-%m-%d) go-algorand $(git -C "$CHECKOUT" rev-parse --short HEAD)"
+          # Same reason: main may have moved while we ran.
+          git pull --rebase --quiet origin main
           git push
           echo "committed=true" >> "$GITHUB_OUTPUT"
           # The site build has to be pointed at this commit by hand: it is created
