@@ -135,9 +135,11 @@ on the branch only, since nothing here would trend it.
   the state proof cost lives in falcon and the merkle proofs.
 - [x] **`BenchmarkTransactionPoolRecompute`** (data/pools/transactionPool_test.go:1023) calls
   `FailNow` unless `MaxTxnBytesPerBlock` is 5 MB, allocates b.N pools of 75k txns and sleeps a
-  second. Rewritten, on the branch and by a patch here, as a fixed 5000-txn pool timing
-  `recomputeBlockEvaluator` with nothing committed between iterations: about 110 ms/op, 22 us
-  per txn, reported as `ns/txn` too. Tracked.
+  second. Rewritten, on the branch and by a patch here: the pool is filled until a transaction no
+  longer fits the block (28,649 payments at 5 MB), then `recomputeBlockEvaluator` is timed with
+  nothing committed between iterations, so each op is the re-evaluation of one full block's
+  worth of pending transactions: about 0.74 s/op, 26 us per txn, reported as `ns/txn` too.
+  Tracked.
 
 The exclusions this repo recorded for `BenchmarkBlockEvaluatorRAM*` and `BenchmarkPrefetcherPayment`
 were partly stale: the `NoCrypto` variants call `Eval` with validation off so the proposer check

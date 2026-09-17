@@ -6,7 +6,7 @@
 # profile when CPUPROFILE is set. It cannot run under go test -bench with the
 # default block size or a normal benchtime.
 #
-# Replace it with a fixed 5000-transaction pool that times
+# Replace it with a pool filled to one full block that times
 # recomputeBlockEvaluator, the work OnNewBlock does after every block. The
 # new benchmark lives in its own file; the old one is cut out of the test
 # file along with the imports only it used. The same change is a commit on the
@@ -77,37 +77,45 @@ import (
 
 // BenchmarkTransactionPoolRecompute times recomputeBlockEvaluator, which
 // OnNewBlock runs after every block: a fresh block evaluator is started and
-// every pending transaction group is applied to it again. The pool holds a
-// fixed number of payment transactions and nothing is committed between
-// iterations, so the pool is the same size on every one and the cost measured
-// is the re-evaluation of the pending set.
+// every pending transaction group is applied to it again.
+//
+// The pool is filled with payment transactions until one no longer fits in
+// the block (MaxTxnBytesPerBlock), so it holds a full block plus the
+// transaction that spilled over, which is the pool a node has when blocks are
+// full. Nothing is committed between iterations, so the pool is the same size
+// on every one and the cost measured is the re-evaluation of a full block's
+// worth of pending transactions. The count is reported through ns/txn.
 func BenchmarkTransactionPoolRecompute(b *testing.B) {
 	const numAccounts = 100
-	const numTxns = 5000
 
 	secrets, addresses := generateAccounts(numAccounts)
 	l := mockLedger(b, initAccFixed(addresses, 1<<50), protocol.ConsensusCurrentVersion)
 	pool := MakeTransactionPool(l, config.GetDefaultLocal(), logging.Base(), nil)
 
-	for i := 0; i < numTxns; i++ {
+	// The evaluator starts a second pending block when a group does not fit
+	// in the first; that is the signal the block is full.
+	numTxns := 0
+	for pool.numPendingWholeBlocks == 0 {
 		tx := transactions.Transaction{
 			Type: protocol.PaymentTx,
 			Header: transactions.Header{
-				Sender:      addresses[i%numAccounts],
+				Sender:      addresses[numTxns%numAccounts],
 				Fee:         basics.MicroAlgos{Raw: 20000 + proto.MinTxnFee},
 				FirstValid:  0,
 				LastValid:   basics.Round(proto.MaxTxnLife),
 				GenesisHash: l.GenesisHash(),
 			},
 			PaymentTxnFields: transactions.PaymentTxnFields{
-				Receiver: addresses[(i+1)%numAccounts],
+				Receiver: addresses[(numTxns+1)%numAccounts],
 				// The amount makes each transaction, and so each txid, distinct.
-				Amount: basics.MicroAlgos{Raw: proto.MinBalance + uint64(i)},
+				Amount: basics.MicroAlgos{Raw: proto.MinBalance + uint64(numTxns)},
 			},
 		}
-		require.NoError(b, pool.rememberOne(tx.Sign(secrets[i%numAccounts])))
+		require.NoError(b, pool.rememberOne(tx.Sign(secrets[numTxns%numAccounts])))
+		numTxns++
 	}
 	require.Equal(b, numTxns, pool.PendingCount())
+	b.Logf("%d transactions fill a %d-byte block", numTxns-1, proto.MaxTxnBytesPerBlock)
 
 	committed := map[transactions.Txid]ledgercore.IncludedTransactions{}
 	b.ResetTimer()
@@ -116,7 +124,7 @@ func BenchmarkTransactionPoolRecompute(b *testing.B) {
 	}
 	b.StopTimer()
 	require.Equal(b, numTxns, pool.PendingCount())
-	b.ReportMetric(float64(b.Elapsed().Nanoseconds())/float64(b.N)/numTxns, "ns/txn")
+	b.ReportMetric(float64(b.Elapsed().Nanoseconds())/float64(b.N)/float64(numTxns), "ns/txn")
 }
 GOEOF
 

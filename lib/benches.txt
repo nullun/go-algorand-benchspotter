@@ -31,7 +31,7 @@ BenchmarkAppRateLimiter_TxgroupToKeys   # app rate limiter key derivation, seede
 BenchmarkStatusCachePut         # pending-txn status cache, the /v2/transactions/pending path
 BenchmarkStatusCacheCheckHit    # lookup of a cached txn status
 BenchmarkStatusCacheCheckMiss   # lookup that misses
-BenchmarkTransactionPoolRecompute   # re-evaluate a 5000-txn pool after a block, as OnNewBlock does; needs patches/rewrite-txpool-recompute-benchmark.sh
+BenchmarkTransactionPoolRecompute   # re-evaluate a full block's worth of pending txns (28.6k at 5 MB) as OnNewBlock does, ~0.7s/op; needs patches/rewrite-txpool-recompute-benchmark.sh
 
 # --- AVM (data/transactions/logic) ------------------------------------------
 BenchmarkCheckSignature         # logic.CheckSignature on the TinyMan lsig
