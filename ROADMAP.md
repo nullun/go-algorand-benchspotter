@@ -102,22 +102,28 @@ still left out because `BenchmarkSignVerify` covers the ed25519 side.
 ### Broken at master, each a one-line fix
 
 Each of these panics or fails and takes its whole package's test binary down, which is the
-session-aborting failure mode. Each is a small upstream PR, or a script in `patches/` until it
-lands.
+session-aborting failure mode. The checked ones are fixed twice over: as scripts in `patches/`
+that repair the throwaway checkout, and as commits on the `bench/fix-broken-benchmarks` branch
+of the go-algorand clone at `~/GitHub/algorand/go-algorand` (four: one per fix, plus one that
+moves `benchmarkBlockValidationMix`'s progress output from `fmt.Printf` to `b.Logf`, since it
+landed inside the result line whenever Go ran a second round of iterations and parsers dropped
+the result). The patches skip themselves once the upstream code has the fix. The remaining three
+are not patched because nothing here would trend them.
 
-- [ ] **The txHandler backlog family** (`BenchmarkHandleTxns`, `HandleTxnGroups`, `HandleMsig*`,
+- [x] **The txHandler backlog family** (`BenchmarkHandleTxns`, `HandleTxnGroups`, `HandleMsig*`,
   `HandleBLW*`, `HandleLsigTxnGroups`). `runHandlerBenchmarkWithBacklog` emulates `Start()`
   without starting the rate limiter, and `handler.Stop()` then calls a nil cancel func in
   `redCongestionManager.Stop` (util/rateLimit.go:462). Fix: `handler.erl.Start()` after
   data/txHandler_test.go:1738, or return from `Stop` when `ctxCancel` is nil.
-- [ ] **`BenchmarkBlockEvaluatorRAMCrypto`, `DiskCrypto`, and all four `BenchmarkBlockValidation*`.**
+- [x] **`BenchmarkBlockEvaluatorRAMCrypto`, `DiskCrypto`, and all four `BenchmarkBlockValidation*`.**
   They validate blocks built from an unfinished block with no proposer, and payouts have been in
   `ConsensusCurrentVersion` since v40. The pattern that works is at ledger/ledger_perf_test.go:302.
   Fix: `FinishBlock(committee.Seed{0x01}, <address>, false)` at ledger/evalbench_test.go:528 and
   :565 and at ledger/fullblock_perf_test.go:148.
-- [ ] **`BenchmarkCryptoVerifierVoteVertification`** (agreement/cryptoVerifier_test.go:285) calls
-  `Verified(AgreementVoteTag)`, which panics since votes moved to `VerifiedVotes()`. After the fix
-  it is a 100 us benchmark of `unauthenticatedVote.verify`, the dominant CPU cost under vote load.
+- [x] **`BenchmarkCryptoVerifierVoteVertification`** (agreement/cryptoVerifier_test.go:285) calls
+  `Verified(AgreementVoteTag)`, which panics since votes moved to `VerifiedVotes()`, and behind
+  that builds the vote for round 300 against a fixture at round 1. Fixed, it is a 35 us benchmark
+  of `unauthenticatedVote.verify`, the dominant CPU cost under vote load.
 - [ ] **`BenchmarkCodecEncoder`** (protocol/encodebench_test.go:31) encodes a nil and segfaults.
 - [ ] **`BenchmarkVerifyWeights` and `BenchmarkNumReveals`** (crypto/stateproof/weights_test.go:199,
   :220) fail on "too many reveals in state proof" unconditionally.

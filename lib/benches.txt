@@ -52,6 +52,9 @@ BenchmarkPrefetcherApps         # the same for app-call groups
 BenchmarkMakeStateDelta         # per-block delta allocation, 20 MB/op
 BenchmarkOnlineAccountsCacheRead320     # agreement-round online lookups
 BenchmarkBlockEvaluatorRAMNoCrypto      # 50k-txn block through Eval, ~14s setup, ~0.7s/op
+BenchmarkBlockEvaluatorRAMCrypto        # the same block through Ledger.Validate, signatures included; needs patches/fix-block-benchmarks-proposer.sh
+BenchmarkBlockValidationJustPayNoNew    # Eval plus AddBlock of payment blocks between existing accounts; same patch
+BenchmarkBlockValidationMix             # the same with payments, assets and app calls, new accounts included
 BenchmarkPay                    # full payment blocks under ConsensusFuture; since v5, fails on proposer at older tags
 BenchmarkAppInt1                # full app-call blocks, same harness
 
@@ -70,6 +73,7 @@ BenchmarkGenerateMessageDigest  # per-message dedup hash
 BenchmarkRouterUpdate           # agreement event routing, 0 allocs (2 subs)
 BenchmarkVoteDecoding           # decode a signed vote
 BenchmarkCryptoVerifierProposalVertification   # proposal verify through the execpool
+BenchmarkCryptoVerifierVoteVertification       # vote verify: VRF, sortition, one-time signature; needs patches/fix-vote-verifier-benchmark.sh
 
 # --- util ----------------------------------------------------------------------
 BenchmarkBloomFilterSet         # txsync bloom filters
@@ -83,6 +87,8 @@ BenchmarkAppendMsgBlockHeader   # steps when the header grows (v4.2.1), not when
 # Not here, and why: ROADMAP.md, "Existing but deliberately not tracked".
 # MerkleCommit and MerkleVerify1M are grids over hash family x size.
 # BenchmarkSign (crypto) is covered by SignVerify; the secp256k1 one is the AVM's ecdsa path.
-# The txHandler backlog family, BlockEvaluator*Crypto, BlockValidation*,
-# CryptoVerifierVoteVertification, CodecEncoder and the stateproof weights
-# benchmarks fail at master and would abort the session; ROADMAP.md has the fixes.
+# BlockEvaluator*Crypto, BlockValidation* and CryptoVerifierVoteVertification
+# fail at upstream master and run here only because patches/ repairs them.
+# The txHandler backlog family is repaired too but not trended: throughput
+# tests with sub-benchmarks per invalid rate and TPS. CodecEncoder and the
+# stateproof weights benchmarks still fail at master; ROADMAP.md has the fixes.

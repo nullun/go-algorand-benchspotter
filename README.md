@@ -18,7 +18,9 @@ checkout they own, and the source edits a stable benchmark run needs are applied
   directive, each built with the toolchain it names.
 - `lib/benches.txt` - the benchmark set, 45 names with a note on what each measures.
 - `lib/check-steps.py` - compares the newest point with the ones before it; the nightly runs it.
-- `patches/` - edits applied to the checkout before benchmarking, and the noise sentinel.
+- `patches/` - edits applied to the checkout before benchmarking: the noise sentinel, the
+  ed25519 verifier pin, and repairs for three upstream benchmarks that fail at master (each also a
+  commit on the `bench/fix-broken-benchmarks` branch of the go-algorand clone, for upstream PRs).
 - `site/` - a static trend viewer published to GitHub Pages.
 - `ROADMAP.md` - the survey of every benchmark upstream: what is tracked, what was left out
   and why, what is broken at master, and what is worth writing next.
