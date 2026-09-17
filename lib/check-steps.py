@@ -5,9 +5,11 @@
 """Flag steps between the newest benchmark point and the points before it.
 
 A point is every session of one commit on one runner (the RUNS repeats), as on
-the site. For each series the newest point's median is compared with the median
-of the previous --history points of the same kind (nightly against nightlies,
-release against releases) on the same runner. A step counts when it is
+the site. Points are in commit order. The point checked is the one measured
+most recently, and it is compared with the --history points before it in
+history of the same kind (nightly against nightlies, release against releases)
+on the same runner, so an old tag measured late is judged against its
+neighbours, not against the newest nightlies. A step counts when it is
 larger than --min-pct and larger than --spread-factor times the widest
 run-to-run spread seen in either the new point or the baseline points, so a
 noisy series has to move further than a quiet one before anything is said.
@@ -45,10 +47,14 @@ def kind_of(session):
     return next((t for t in session["tags"] if t in KINDS), None)
 
 
+def commit_key(s):
+    return (s["commit_time"] or s["time"], s["time"])
+
+
 def points(sessions, runner, kind):
-    """[{label, commit, sessions}] for one runner and kind, oldest first."""
+    """[{label, commit, sessions}] for one runner and kind, in commit order."""
     out, seen = [], {}
-    for s in sessions:
+    for s in sorted(sessions, key=commit_key):
         if runner_of(s) != runner or kind_of(s) != kind or "partial" in s["tags"]:
             continue
         if s["commit"] not in seen:
@@ -81,7 +87,11 @@ def check(store, runner, kind, history, min_pct, spread_factor, unit):
     pts = points(sessions, runner, kind)
     if len(pts) < 2:
         return runner, None, []
-    new, base = pts[-1], pts[-1 - history:-1]
+    # The point measured most recently, wherever its commit sits in history.
+    i = max(range(len(pts)), key=lambda k: max(s["time"] for s in pts[k]["sessions"]))
+    if i == 0:
+        return runner, None, []
+    new, base = pts[i], pts[max(0, i - history):i]
 
     rows = []
     for name in sorted({n for s in new["sessions"] for n in s["results"]}):

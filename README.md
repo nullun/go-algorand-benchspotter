@@ -48,7 +48,8 @@ in the store: a commit with a `nightly` session, a tag with a `release` session.
 `.github/workflows/nightly.yml` runs at 02:00 UTC, benchmarks whatever `origin/master` points
 at, commits the sessions and triggers the site rebuild. It exits without benchmarking if that
 commit already has a nightly session, so a quiet day costs nothing. After the run it compares
-the new point with the previous seven nightlies on the same runner (`lib/check-steps.py`),
+the new point with the seven nightlies before it in commit order on the same runner
+(`lib/check-steps.py`),
 writes the result to the job summary and opens an issue when a series stepped by more than 5%
 and more than twice its run-to-run spread. A dispatch can add cpu or mem profiles to the run
 with the `profiles` input; they are megabytes per session, so only for a run to drill into.
@@ -86,6 +87,11 @@ A self-hosted runner also needs `jq` and a C toolchain; the workflow installs be
 standard library only and does not need the benchspotter binary.
 
     uv run site/build.py && open site/dist/index.html
+
+Points are in commit order by default, so a tag measured late lands where it belongs in history
+rather than at the end; "order by run date" gives record order, which is the order to read the
+noise sentinel in. Each session carries its commit time as a tag (`lib/backfill-commit-times.sh`
+added it to the sessions that predate this), and the step check uses the same order.
 
 The chart draws a dashed rule where the Go toolchain that built the code changed, since every
 series tends to step there at once. Clicking a point opens the upstream compare view between

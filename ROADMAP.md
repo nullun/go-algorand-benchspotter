@@ -28,6 +28,9 @@ Checked items are done. The order within a section is priority.
 - [x] **Wider set, one package at a time.** benchspotter aborts a session when any package's
   `go test` fails, so a new package should be smoke-run at `-count 1` on a dispatch before it
   joins the nightly set.
+- [x] **Commit order.** Sessions carry `commit:<utc timestamp>` and the site and step check
+  sort on it, with a toggle back to record order. An old tag measured late lands where it
+  belongs; the sweep no longer has to run oldest first for the display's sake.
 - [ ] **Consensus version rules.** Same idea as the toolchain rules, for bumps of
   `ConsensusCurrentVersion`. Needs the nightly to record the version as a tag.
 - [ ] **Per-benchmark benchtime.** Several upstream benchmarks build `b.N` fixtures in untimed

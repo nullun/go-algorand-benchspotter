@@ -58,8 +58,8 @@ if [ $# -gt 0 ]; then
   TAGS=("$@")
 else
   TAGS=()
-  # Oldest-first is mandatory: benchspotter orders the trend view by session
-  # creation time, not by commit date.
+  # Oldest first. The site orders points by commit time (a session tag), so
+  # this is only for benchspotter's own trend view, which orders by record time.
   while IFS= read -r t; do
     if git -C "$CHECKOUT" show "$t:go.mod" 2>/dev/null | grep -q '^toolchain '; then
       TAGS+=("$t")
@@ -90,8 +90,8 @@ if [ ${#TAGS[@]} -eq 0 ]; then
   exit 0
 fi
 
-# Oldest first, so a batched backlog still records sessions in tag order: the
-# trend view sorts by session creation time, not by commit date.
+# Oldest first, so a batched backlog records sessions in tag order for
+# benchspotter's own trend view; the site sorts by commit time regardless.
 if [ "$MAX_TAGS" -gt 0 ] && [ ${#TAGS[@]} -gt "$MAX_TAGS" ]; then
   echo "${#TAGS[@]} tags to do, taking the oldest $MAX_TAGS this run"
   TAGS=("${TAGS[@]:0:$MAX_TAGS}")

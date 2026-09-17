@@ -71,6 +71,13 @@
         <input id="filter" type="search" placeholder="e.g. TxHandler" size="18">
       </div>
       <div>
+        <label for="order">order by</label>
+        <select id="order">
+          <option value="commit">commit date</option>
+          <option value="time">run date</option>
+        </select>
+      </div>
+      <div>
         <label for="group">repeats</label>
         <label style="color: var(--fg)"><input id="group" type="checkbox" checked> combine</label>
       </div>
@@ -125,6 +132,10 @@ const UPSTREAM = "https://github.com/algorand/go-algorand";
 // since points from different hardware never belong on one line.
 const KINDS = { release: "releases", nightly: "nightlies", range: "range points" };
 const kindOf = s => s.tags.find(t => t in KINDS);
+// Ordered by when the commit was made (a tag measured late still lands where
+// it belongs in history) or by when the session was recorded, which is the
+// order to read the noise sentinel in.
+const sortKey = s => $("order").value === "commit" ? (s.commit_time || s.time) + " " + s.time : s.time;
 function visibleSessions() {
   const kinds = new Set([...$("kinds").querySelectorAll("input:checked")].map(i => i.value));
   const runner = $("runner").value;
@@ -132,7 +143,7 @@ function visibleSessions() {
     const s = DATA.sessions[i];
     const kind = kindOf(s);
     return (!kind || kinds.has(kind)) && (!runner || runnerOf(s) === runner);
-  });
+  }).sort((a, b) => sortKey(DATA.sessions[a]) < sortKey(DATA.sessions[b]) ? -1 : 1);
 }
 
 // One x position per commit per machine. The repeats of a set (RUNS=3) are
@@ -252,7 +263,9 @@ function draw() {
       const prev = k ? points[k - 1].v : null;
       const d = prev == null ? null : ((p.v - prev) / prev) * 100;
       const spread = p.n > 1 ? ((p.hi - p.lo) / p.v) * 100 : null;
-      tip.innerHTML = `<b>${p.g.label}</b> ${s.commit}<br>${s.time.slice(0, 16).replace("T", " ")}<br>` +
+      tip.innerHTML = `<b>${p.g.label}</b> ${s.commit}<br>` +
+        (s.commit_time ? `committed ${s.commit_time.slice(0, 16).replace("T", " ")}, ` : "") +
+        `measured ${s.time.slice(0, 16).replace("T", " ")}<br>` +
         `${fmt(p.v, unit)}` +
         (d == null ? "" : ` <span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}%</span>`) +
         (spread == null ? "" : `<br><span class="meta">${p.n} runs, ${fmt(p.lo, unit)} to ${fmt(p.hi, unit)}, spread ${spread.toFixed(1)}%</span>`) +
@@ -327,6 +340,7 @@ fetch("data.json").then(r => r.json()).then(data => {
   $("filter").addEventListener("input", () => { fillBenchmarks(); draw(); });
   $("bench").addEventListener("change", () => { fillMetrics(); draw(); });
   $("metric").addEventListener("change", draw);
+  $("order").addEventListener("change", draw);
   $("group").addEventListener("change", draw);
   addEventListener("resize", draw);
 }).catch(e => { $("sub").textContent = "failed to load data.json: " + e; });

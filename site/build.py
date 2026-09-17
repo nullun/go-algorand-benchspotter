@@ -61,20 +61,28 @@ def load_sessions(store):
             continue
         meta = json.loads(meta_path.read_text())
         machine = meta.get("machine") or {}
+        tags = meta.get("tags") or []
+        # commit:<utc timestamp>, set by the scripts (lib/common.sh). A session
+        # without one (none should remain) sorts by the time it was recorded.
+        commit_time = next((t[len("commit:"):] for t in tags if t.startswith("commit:")), None)
         sessions.append(
             {
                 "id": d.name,
                 "time": session_time(d.name).isoformat(),
+                "commit_time": commit_time,
                 "name": meta.get("name", d.name),
                 "commit": (meta.get("git_commit") or "")[:10],
-                "tags": meta.get("tags") or [],
+                "tags": tags,
                 "notes": meta.get("notes", ""),
                 "cpu": machine.get("cpu", "?"),
                 "platform": f"{machine.get('goos', '?')}/{machine.get('goarch', '?')}",
                 "results": parse_bench(bench_path),
             }
         )
-    sessions.sort(key=lambda s: s["time"])
+    # Commit order, with record time breaking ties (the RUNS repeats of one
+    # commit). The page can re-sort by record time; the series arrays are
+    # indexed by position in this list either way.
+    sessions.sort(key=lambda s: (s["commit_time"] or s["time"], s["time"]))
     return sessions
 
 
