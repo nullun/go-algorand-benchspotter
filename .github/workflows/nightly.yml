@@ -22,6 +22,11 @@ on:
         description: benchmark even if this commit already has a nightly session
         type: boolean
         default: false
+      profiles:
+        description: >
+          extra benchspotter profiles to record, space-separated (cpu mem block
+          mutex). Megabytes per session, so only for a run you will drill into.
+        default: ''
 
 concurrency:
   # Never two benchmark runs on one machine at the same time.
@@ -38,6 +43,7 @@ jobs:
     timeout-minutes: 240
     permissions:
       contents: write
+      issues: write
     outputs:
       committed: ${{ steps.commit.outputs.committed }}
       sha: ${{ steps.commit.outputs.sha }}
@@ -54,7 +60,35 @@ jobs:
           # Through the environment, not interpolated into the script body: a
           # dispatch input is attacker-controlled shell otherwise.
           REF: ${{ github.event.inputs.ref || 'origin/master' }}
+          PROFILES: ${{ github.event.inputs.profiles }}
         run: ./run-nightly.sh "$REF"
+
+      # Tonight's point against the previous nightlies on this runner. The
+      # report goes to the job summary either way; a step also opens an issue.
+      # Exit 3 is "stepped", anything else non-zero is the script failing.
+      - uses: astral-sh/setup-uv@v5
+      - name: Check for steps
+        id: steps
+        run: |
+          set +e
+          uv run lib/check-steps.py --fail-on-step > "$RUNNER_TEMP/steps.md"
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/steps.md" >> "$GITHUB_STEP_SUMMARY"
+          case $rc in
+            0) echo "stepped=false" >> "$GITHUB_OUTPUT" ;;
+            3) echo "stepped=true"  >> "$GITHUB_OUTPUT" ;;
+            *) exit $rc ;;
+          esac
+
+      - name: Open an issue for the step
+        if: steps.steps.outputs.stepped == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "step: $(date -u +%Y-%m-%d) go-algorand $(git -C "$CHECKOUT" rev-parse --short HEAD)" \
+            --body-file "$RUNNER_TEMP/steps.md"
 
       - name: Commit results
         id: commit

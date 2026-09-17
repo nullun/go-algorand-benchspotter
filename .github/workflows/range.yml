@@ -1,0 +1,99 @@
+name: range
+
+# Benchmarks every first-parent commit between two refs, one session set each,
+# and commits the sessions tagged "range". The nightly gives one point a day
+# and master often merges several PRs in a day; when a nightly steps, this is
+# what says which commit did it. Run it with the two nightly commits either
+# side of the step. The site shows range points as their own kind, and the
+# step check compares them only with each other.
+
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: older ref (exclusive), usually the last good nightly commit
+        required: true
+      to:
+        description: newer ref (inclusive), usually the first bad nightly commit
+        required: true
+      runs:
+        description: sessions to record per commit
+        default: '1'
+      max_commits:
+        description: refuse to start if the range has more commits than this
+        default: '20'
+
+concurrency:
+  group: benchmark-runner
+  cancel-in-progress: false
+
+jobs:
+  range:
+    runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 330
+    permissions:
+      contents: write
+    outputs:
+      committed: ${{ steps.commit.outputs.committed }}
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/bench-setup
+
+      - name: Benchmark each commit
+        env:
+          RUNS: ${{ github.event.inputs.runs }}
+          RUNNER: runner:${{ vars.BENCH_RUNNER || 'github-hosted' }}
+          KIND: range
+          # Through the environment, not interpolated into the script body: a
+          # dispatch input is attacker-controlled shell otherwise.
+          FROM: ${{ github.event.inputs.from }}
+          TO: ${{ github.event.inputs.to }}
+          MAX_COMMITS: ${{ github.event.inputs.max_commits }}
+        run: |
+          . lib/common.sh
+          bs_preflight && bs_clone
+          COMMITS="$(git -C "$CHECKOUT" rev-list --first-parent --reverse "$FROM..$TO")"
+          n="$(echo "$COMMITS" | grep -c .)"
+          echo "$n commits in $FROM..$TO"
+          if [ "$n" -gt "$MAX_COMMITS" ]; then
+            echo "more than MAX_COMMITS=$MAX_COMMITS; narrow the range or raise the limit" >&2
+            exit 1
+          fi
+          rc=0
+          for c in $COMMITS; do
+            ./run-nightly.sh "$c" || rc=1
+          done
+          exit $rc
+
+      - name: Commit results
+        id: commit
+        if: always()
+        env:
+          FROM: ${{ github.event.inputs.from }}
+          TO: ${{ github.event.inputs.to }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .benchspotter
+          if git diff --cached --quiet; then
+            echo "no new sessions"
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "range: $FROM..$TO"
+          git push
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  pages:
+    needs: range
+    if: needs.range.outputs.committed == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      ref: ${{ needs.range.outputs.sha }}
