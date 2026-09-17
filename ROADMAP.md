@@ -9,7 +9,7 @@ Checked items are done. The order within a section is priority.
 
 ## 1. Repo improvements
 
-- [ ] **Noise sentinel.** A benchmark that does not depend on go-algorand at all (a fixed hash
+- [x] **Noise sentinel.** A benchmark that does not depend on go-algorand at all (a fixed hash
   loop over a static buffer), dropped into the throwaway checkout by `patches/`. Its movement
   night to night is pure machine noise, so every other series can be read against it, and a
   hosted-runner point that moved with the sentinel can be discounted.
@@ -23,9 +23,9 @@ Checked items are done. The order within a section is priority.
 - [ ] **Range dispatch.** Master often merges several PRs a day and the nightly is one point. A
   workflow that takes two refs and benchmarks every first-parent commit between them fills the
   gap when a step appears. Sessions are tagged `range` so the site can toggle them.
-- [ ] **Profiles on demand.** A dispatch input that adds a cpu or mem profile to a single
+- [x] **Profiles on demand.** A dispatch input that adds a cpu or mem profile to a single
   nightly run. Profiles are too large to record every night.
-- [ ] **Wider set, one package at a time.** benchspotter aborts a session when any package's
+- [x] **Wider set, one package at a time.** benchspotter aborts a session when any package's
   `go test` fails, so a new package should be smoke-run at `-count 1` on a dispatch before it
   joins the nightly set.
 - [ ] **Consensus version rules.** Same idea as the toolchain rules, for bumps of

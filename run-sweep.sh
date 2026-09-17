@@ -40,7 +40,8 @@ RUNS="${RUNS:-3}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
 SKIP_IF_DONE="${SKIP_IF_DONE:-1}"
 MAX_TAGS="${MAX_TAGS:-0}"
-BENCHES="${BENCHES:-$(grep -v '^#' lib/benches.txt | tr '\n' ' ')}"
+# One name per line, trailing "# ..." comments dropped.
+BENCHES="${BENCHES:-$(sed 's/#.*//' lib/benches.txt | awk 'NF {print $1}' | tr '\n' ' ')}"
 
 bs_preflight || exit 1
 bs_clone || { echo "clone/fetch failed" >&2; exit 1; }

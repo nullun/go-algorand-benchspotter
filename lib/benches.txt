@@ -1,35 +1,88 @@
-# Default benchmark set, one regexp per line. Every one of these exists at all 20
-# stable tags in the archive and ran successfully at both ends of that window
-# (v3.24.0-stable/go1.21.10 and v5.0.1-stable/go1.25.3) on 2026-09-14.
-BenchmarkTxn
-BenchmarkPaysetGroups
-BenchmarkCompactDeltas
-BenchmarkTxHandlerProcessing
-BenchmarkAppendMsgSignedTxn
-BenchmarkAppendMsgBlockHeader
+# The benchmark set, one name per line. The scripts turn each into the regexp
+# ^Name(/|$), so a name has to be the full function name and matches its literal
+# sub-benchmarks. A name that matches nothing at the ref under test is ignored,
+# which is what lets one list serve every tag; a set where nothing at all matches
+# is an error.
 #
-# MerkleCommit is not recorded any more. Its 3 x 5 x 5 grid of hash family x Item
-# x Count produced 45 of the 52 series in the archive, they all moved together
-# (one step anywhere in 20 releases, -28% at v3.27.0), and at 93s against 26s for
-# a single family at -count=1 they were most of the run time of a session.
-# `BenchmarkMerkleCommit/sha512_256` brings back the family the ledger's merkle
-# trees use, and `BenchmarkMerkleCommit` the lot. benchspotter discovers one
-# sub-benchmark level, so a single Item/Count cell cannot be selected: the grid
-# comes as a block.
+# Rules for what goes here: flat or a handful of literal subs, deterministic,
+# a few seconds at default benchtime, no grid over sizes or counts (the retired
+# MerkleCommit grid produced 45 series that all moved together and were most of
+# a session's run time), and nothing that opens sockets or sleeps. ROADMAP.md
+# lists what was considered and left out, and why.
 #
-# Deliberately absent. benchspotter abandons the rest of a session when one
-# package's `go test` fails, so a benchmark that fails costs the whole run:
-#
-#   BenchmarkHandleTxnGroups      panics at every tag in the window:
-#                                 runHandlerBenchmarkWithBacklog emulates Start()
-#                                 without starting the ElasticRateLimiter, and
-#                                 handler.Stop() then calls a nil ctxCancel.
-#   BenchmarkBlockValidationMix   "proposer missing when payouts enabled" at both
-#                                 ends: builds blocks under ConsensusFuture.
-#   BenchmarkBlockEvaluatorRAM*   same error from v4.0.x on, once payouts became
-#                                 part of ConsensusCurrentVersion.
-#   BenchmarkPay, BenchmarkAppInt1   same error at v3.24.0 (ConsensusFuture).
-#   BenchmarkPrefetcherPayment    fails at v3.24.0.
-#
-# Any block-building ledger benchmark needs an upstream fix (the harness must set
-# a proposer) before it can be trended.
+# Every name here ran at master (8cd5eb5f6, 2026-09-15) in one session of 217s
+# at -count 1 on an M2 Pro, 55 series. Names marked "since" do not exist at the
+# older stable tags and are skipped there.
+
+# --- noise sentinel (patches/add-noise-sentinel.sh, not go-algorand code) ----
+# Fixed work that does not depend on the ref. If these move, the machine did.
+BenchmarkNoiseSentinelHash
+BenchmarkNoiseSentinelLoop
+
+# --- transaction verification (data/transactions/verify) --------------------
+BenchmarkTxn                    # one signed txn through verify, the ed25519 path
+BenchmarkPaysetGroups           # a block's groups through the verify execpool
+BenchmarkTinyMan                # a real mainnet swap group: lsig eval, group check (3 subs)
+
+# --- txn handler and pool (data, data/pools) ---------------------------------
+BenchmarkTxHandlerProcessing    # processDecoded and verify.TxnGroup (2 subs)
+BenchmarkTxHandlerDecoderMsgp   # wire decode of a txn group
+BenchmarkAppRateLimiter_TxgroupToKeys   # app rate limiter key derivation, seeded
+BenchmarkStatusCachePut         # pending-txn status cache, the /v2/transactions/pending path
+BenchmarkStatusCacheCheckHit
+BenchmarkStatusCacheCheckMiss
+
+# --- AVM (data/transactions/logic) ------------------------------------------
+BenchmarkCheckSignature         # logic.CheckSignature on the TinyMan lsig
+BenchmarkCheckx5                # CheckSignature over five real programs
+BenchmarkAddx64                 # interpreter dispatch, add x64 at two stack depths (2 subs)
+BenchmarkNopPassx1              # smallest program that passes
+BenchmarkVerify                 # crypto opcodes: ed25519verify_bare, ecdsa k1/r1, falcon_verify, vrf_verify, plus pop and add (7 subs)
+
+# --- basics, committee (data/basics, data/committee) -------------------------
+BenchmarkAddressFormatting      # address checksum, every REST round trip
+BenchmarkUnmarshalChecksumAddress
+BenchmarkSortition              # VRF verify plus sortition, per agreement vote, seeded
+
+# --- ledger ------------------------------------------------------------------
+BenchmarkCompactDeltas          # makeCompactAccountDeltas, per commit round
+BenchmarkCowChild               # per-group cow allocation, 0 allocs
+BenchmarkPrefetcherPayment      # account prefetch fan-out ahead of eval
+BenchmarkPrefetcherApps
+BenchmarkMakeStateDelta         # per-block delta allocation, 20 MB/op
+BenchmarkOnlineAccountsCacheRead320     # agreement-round online lookups
+BenchmarkBlockEvaluatorRAMNoCrypto      # 50k-txn block through Eval, ~14s setup, ~0.7s/op
+BenchmarkPay                    # full payment blocks under ConsensusFuture; since v5, fails on proposer at older tags
+BenchmarkAppInt1                # full app-call blocks, same harness
+
+# --- crypto --------------------------------------------------------------------
+BenchmarkHash                   # crypto.Hash of 32 bytes, sha512_256
+BenchmarkSignVerify             # ed25519 sign plus verify, libsodium
+BenchmarkVerify25519            # one verify, libsodium and ed25519consensus side by side (2 subs)
+BenchmarkBatchVerifierImpls     # 64-signature batch, libsodium single, libsodium batch, ed25519consensus (3 subs)
+BenchmarkOneTimeSigBatchVerification    # the agreement vote signature, three backends (3 subs)
+BenchmarkVrfVerify              # VRF verify, libsodium; keygen per b.N in untimed setup
+BenchmarkAdd                    # crypto/merkletrie, the catchpoint trie
+BenchmarkDelete
+
+# --- network, agreement ----------------------------------------------------------
+BenchmarkGenerateMessageDigest  # per-message dedup hash
+BenchmarkRouterUpdate           # agreement event routing, 0 allocs (2 subs)
+BenchmarkVoteDecoding           # decode a signed vote
+BenchmarkCryptoVerifierProposalVertification   # proposal verify through the execpool
+
+# --- util ----------------------------------------------------------------------
+BenchmarkBloomFilterSet         # txsync bloom filters
+BenchmarkBloomFilterTest
+BenchmarkTagCounter             # metric increment per tagged message
+
+# --- msgp codec (protocol/test) -----------------------------------------------------
+BenchmarkAppendMsgSignedTxn     # encodes a zero-value struct; a canary, not a codec test
+BenchmarkAppendMsgBlockHeader   # steps when the header grows (v4.2.1), not when code slows
+
+# Not here, and why: ROADMAP.md, "Existing but deliberately not tracked".
+# MerkleCommit and MerkleVerify1M are grids over hash family x size.
+# BenchmarkSign exists in two packages and the site keys series by name.
+# The txHandler backlog family, BlockEvaluator*Crypto, BlockValidation*,
+# CryptoVerifierVoteVertification, CodecEncoder and the stateproof weights
+# benchmarks fail at master and would abort the session; ROADMAP.md has the fixes.
