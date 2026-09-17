@@ -88,9 +88,9 @@ Generated `msgp_gen_test.go` benchmarks everywhere: they encode zero-valued stru
 Unmarshal ones ignore the required-field error, so they measure an empty-struct fast path and
 cannot see a codec regression on real traffic. Cheap and stable, but low signal.
 
-Name collisions: `BenchmarkSign` exists in both `crypto` and `crypto/secp256k1`, and the site
-keys series by benchmark name, so selecting it would merge two unrelated series.
-`BenchmarkSignVerify` is used instead.
+Name collisions: `BenchmarkSign` exists in both `crypto` and `crypto/secp256k1`. The site keys
+series by package and name since 2026-09-17, so selecting it would now give two series; it is
+still left out because `BenchmarkSignVerify` covers the ed25519 side.
 
 ### Broken at master, each a one-line fix
 

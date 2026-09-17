@@ -82,7 +82,7 @@ BenchmarkAppendMsgBlockHeader   # steps when the header grows (v4.2.1), not when
 
 # Not here, and why: ROADMAP.md, "Existing but deliberately not tracked".
 # MerkleCommit and MerkleVerify1M are grids over hash family x size.
-# BenchmarkSign exists in two packages and the site keys series by name.
+# BenchmarkSign (crypto) is covered by SignVerify; the secp256k1 one is the AVM's ecdsa path.
 # The txHandler backlog family, BlockEvaluator*Crypto, BlockValidation*,
 # CryptoVerifierVoteVertification, CodecEncoder and the stateproof weights
 # benchmarks fail at master and would abort the session; ROADMAP.md has the fixes.
