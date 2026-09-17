@@ -170,10 +170,18 @@ function groups() {
 function draw() {
   const name = $("bench").value, unit = $("metric").value;
   const values = (DATA.series[name] || {})[unit] || [];
+  const ranges = ((DATA.ranges || {})[name] || {})[unit] || [];
   const points = [];
   for (const g of groups()) {
     const vs = g.idx.map(i => values[i]).filter(v => v != null);
-    if (vs.length) points.push({ g, v: median(vs), lo: Math.min(...vs), hi: Math.max(...vs), n: vs.length });
+    if (!vs.length) continue;
+    // The line is the median of the run medians; the band is the full range of
+    // every repeat in every run, since most of the noise is inside a process.
+    const rs = g.idx.map(i => ranges[i]).filter(Boolean);
+    const lo = rs.length ? Math.min(...rs.map(r => r[0])) : Math.min(...vs);
+    const hi = rs.length ? Math.max(...rs.map(r => r[1])) : Math.max(...vs);
+    const n = rs.length ? rs.reduce((a, r) => a + r[2], 0) : vs.length;
+    points.push({ g, v: median(vs), lo, hi, n, runs: vs.length });
   }
   // Sentinel overlay: the sentinel's relative movement, scaled to start where
   // this series starts. A step both lines take is the runner.
@@ -222,8 +230,8 @@ function draw() {
       transform="rotate(-35 ${px(k).toFixed(1)} ${H - B + 20})">${p.g.label}</text>`);
   });
 
-  // The band is the spread of the repeats, which is the yardstick for whether a
-  // step between two points means anything.
+  // The band is the spread of every repeat in every run, which is the yardstick
+  // for whether a step between two points means anything.
   if (points.some(p => p.n > 1)) {
     const top = points.map((p, k) => `${k ? "L" : "M"}${px(k).toFixed(1)},${py(p.hi).toFixed(1)}`).join("");
     const bottom = points.slice().reverse()
@@ -255,7 +263,7 @@ function draw() {
 
   const first = points[0], last = points[points.length - 1];
   const change = ((last.v - first.v) / first.v) * 100;
-  const sessions = points.reduce((n, p) => n + p.n, 0);
+  const sessions = points.reduce((n, p) => n + p.runs, 0);
   $("chartmeta").textContent =
     `${points.length} points (${sessions} sessions), ${fmt(first.v, unit)} at ${first.g.label}` +
     ` to ${fmt(last.v, unit)} at ${last.g.label} (${change >= 0 ? "+" : ""}${change.toFixed(1)}%)`;
@@ -271,7 +279,7 @@ function draw() {
         `measured ${s.time.slice(0, 16).replace("T", " ")}<br>` +
         `${fmt(p.v, unit)}` +
         (d == null ? "" : ` <span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}%</span>`) +
-        (spread == null ? "" : `<br><span class="meta">${p.n} runs, ${fmt(p.lo, unit)} to ${fmt(p.hi, unit)}, spread ${spread.toFixed(1)}%</span>`) +
+        (spread == null ? "" : `<br><span class="meta">${p.n} samples in ${p.runs} run${p.runs > 1 ? "s" : ""}, ${fmt(p.lo, unit)} to ${fmt(p.hi, unit)}, spread ${spread.toFixed(1)}%</span>`) +
         (p.s == null || !k || points[k - 1].s == null ? "" : `<br><span class="meta">sentinel ${((p.s / points[k - 1].s - 1) * 100).toFixed(1)}% vs previous point</span>`) +
         `<br><span class="meta">${s.tags.filter(t => !/^run\d+$/.test(t)).join(", ")}<br>${s.cpu}, ${s.platform}</span>` +
         (k ? `<br><span class="meta">click: upstream changes since ${points[k - 1].g.label}</span>` : "");

@@ -10,8 +10,9 @@ most recently, and it is compared with the --history points before it in
 history of the same kind (nightly against nightlies, release against releases)
 on the same runner, so an old tag measured late is judged against its
 neighbours, not against the newest nightlies. A step counts when it is
-larger than --min-pct and larger than --spread-factor times the widest
-run-to-run spread seen in either the new point or the baseline points, so a
+larger than --min-pct and larger than --spread-factor times the widest spread
+(over every repeat of every run) seen in either the new point or the baseline
+points, so a
 noisy series has to move further than a quiet one before anything is said.
 
 The two NoiseSentinel* series do not depend on go-algorand (see
@@ -65,16 +66,23 @@ def points(sessions, runner, kind):
 
 
 def point_value(point, name, unit):
-    """(median, spread fraction) over the repeats of a point, or None."""
-    vals = [
-        statistics.median(s["results"][name][unit])
+    """(median of the run medians, spread fraction over every sample) or None.
+
+    The spread takes every -count repeat of every run, not just the run
+    medians: on the hosted runner the spread inside one process is two to four
+    times the spread between processes, so run medians alone understate the
+    noise a step has to beat.
+    """
+    runs = [
+        s["results"][name][unit]
         for s in point["sessions"]
         if name in s["results"] and unit in s["results"][name]
     ]
-    if not vals:
+    if not runs:
         return None
-    med = statistics.median(vals)
-    spread = (max(vals) - min(vals)) / med if med else 0.0
+    med = statistics.median(statistics.median(r) for r in runs)
+    allv = [v for r in runs for v in r]
+    spread = (max(allv) - min(allv)) / med if med else 0.0
     return med, spread
 
 
@@ -135,7 +143,7 @@ def report(runner, new, rows, unit):
         if machine:
             lines.append("")
             lines.append("**A noise sentinel stepped too, so the machine moved, not go-algorand.**")
-        lines += ["", f"| benchmark | now | before | change | run-to-run spread |", "|---|---:|---:|---:|---:|"]
+        lines += ["", f"| benchmark | now | before | change | spread |", "|---|---:|---:|---:|---:|"]
         for r in sorted(steps, key=lambda r: -abs(r["change"])):
             lines.append(
                 f"| {r['name']} | {fmt(r['value'], unit)} | {fmt(r['baseline'], unit)} "

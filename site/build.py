@@ -123,19 +123,22 @@ def build(store, out):
             for unit in s["results"].get(name, {}):
                 units.setdefault(name, set()).add(unit)
 
-    # One point per session per metric: the median of the -count repeats, which
-    # is what benchspotter's own trend view reports.
-    series = {}
+    # One value per session per metric: the median of the -count repeats, which
+    # is what benchspotter's own trend view reports. The range of those repeats
+    # goes alongside, because on the hosted runner the spread inside one process
+    # is two to four times the spread between the RUNS processes: a band drawn
+    # from run medians alone would understate the noise.
+    series, ranges = {}, {}
     for name in names:
-        series[name] = {
-            unit: [
-                round(statistics.median(s["results"][name][unit]), 6)
-                if name in s["results"] and unit in s["results"][name]
-                else None
-                for s in sessions
-            ]
-            for unit in sorted(units.get(name, ()))
-        }
+        series[name], ranges[name] = {}, {}
+        for unit in sorted(units.get(name, ())):
+            meds, rng = [], []
+            for s in sessions:
+                vals = s["results"].get(name, {}).get(unit)
+                meds.append(round(statistics.median(vals), 6) if vals else None)
+                rng.append([round(min(vals), 6), round(max(vals), 6), len(vals)] if vals else None)
+            series[name][unit] = meds
+            ranges[name][unit] = rng
 
     # A series that no longer runs (MerkleCommit/sha256, say) still has years of
     # history worth reading, so keep it and let the page label it.
@@ -151,6 +154,8 @@ def build(store, out):
         "generated": datetime.now(tz=timezone.utc).isoformat(timespec="seconds"),
         "sessions": [{k: v for k, v in s.items() if k != "results"} for s in sessions],
         "series": series,
+        # [min, max, samples] per session, same indexing as series.
+        "ranges": ranges,
     }
 
     out.mkdir(parents=True, exist_ok=True)
