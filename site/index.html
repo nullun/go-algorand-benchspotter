@@ -48,6 +48,8 @@
   .tip .delta.up { color: var(--warn); }
   .tip .delta.down { color: var(--accent); }
   .meta { color: var(--muted); font-size: 12px; }
+  .meta a { color: var(--accent); }
+  #desc { margin: 0 0 8px; }
   .empty { color: var(--muted); padding: 40px 0; text-align: center; }
 </style>
 </head>
@@ -97,6 +99,7 @@
   </div>
 
   <div class="panel">
+    <p class="meta" id="desc"></p>
     <div id="chart"></div>
     <p class="meta" id="chartmeta"></p>
   </div>
@@ -291,15 +294,27 @@ function draw() {
   });
 }
 
+// Series are keyed "package: BenchmarkName", so the filter matches on either
+// and the select groups by package.
+const pkgOf = n => n.split(": ", 1)[0];
+const shortOf = n => n.slice(pkgOf(n).length + 2);
 function fillBenchmarks() {
   const q = $("filter").value.toLowerCase();
   const keep = Object.keys(DATA.series).filter(n => n.toLowerCase().includes(q));
   const current = $("bench").value;
   const retired = new Set(DATA.retired || []);
-  $("bench").innerHTML = keep.map(n =>
-    `<option value="${n}"${n === current ? " selected" : ""}>${n}${retired.has(n) ? "  (no longer recorded)" : ""}</option>`).join("");
+  const groups = new Map();
+  for (const n of keep) (groups.get(pkgOf(n)) || groups.set(pkgOf(n), []).get(pkgOf(n))).push(n);
+  $("bench").innerHTML = [...groups].map(([pkg, ns]) => `<optgroup label="${pkg}">` + ns.map(n =>
+    `<option value="${n}"${n === current ? " selected" : ""}>${shortOf(n)}${retired.has(n) ? "  (no longer recorded)" : ""}</option>`).join("") + `</optgroup>`).join("");
   if (!keep.includes(current) && keep.length) $("bench").value = keep[0];
   fillMetrics();
+  describe();
+}
+function describe() {
+  const n = $("bench").value, pkg = pkgOf(n), note = (DATA.notes || {})[n];
+  $("desc").innerHTML = n ? `<b>${shortOf(n)}</b> in <a href="${UPSTREAM}/tree/master/${pkg}" target="_blank" rel="noopener">${pkg}</a>` +
+    (note ? `: ${note}` : "") : "";
 }
 
 function fillMetrics() {
@@ -333,12 +348,14 @@ fetch("data.json").then(r => r.json()).then(data => {
   $("runner").addEventListener("change", draw);
 
   fillBenchmarks();
-  if ($("bench").querySelector('option[value="BenchmarkTxn"]')) $("bench").value = "BenchmarkTxn";
+  const start = Object.keys(data.series).find(n => n.endsWith(": BenchmarkTxn"));
+  if (start) $("bench").value = start;
   fillMetrics();
+  describe();
   draw();
 
   $("filter").addEventListener("input", () => { fillBenchmarks(); draw(); });
-  $("bench").addEventListener("change", () => { fillMetrics(); draw(); });
+  $("bench").addEventListener("change", () => { fillMetrics(); describe(); draw(); });
   $("metric").addEventListener("change", draw);
   $("order").addEventListener("change", draw);
   $("group").addEventListener("change", draw);

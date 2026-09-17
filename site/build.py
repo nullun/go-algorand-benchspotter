@@ -32,14 +32,26 @@ def session_time(session_id):
     return datetime.fromtimestamp(ms / 1000, tz=timezone.utc)
 
 
+MODULE = "github.com/algorand/go-algorand/"
+
+
 def parse_bench(path):
-    """Return {benchmark name: {metric: [values]}} from a Go benchmark output file."""
+    """Return {"pkg: BenchmarkName": {metric: [values]}} from a Go benchmark output file.
+
+    go test prints "pkg: <import path>" before each package's lines, and a bare
+    name is ambiguous (BenchmarkSign exists in crypto and crypto/secp256k1), so
+    the package is part of the key.
+    """
     out = {}
+    pkg = "?"
     for line in path.read_text(errors="replace").splitlines():
         fields = line.split()
+        if len(fields) == 2 and fields[0] == "pkg:":
+            pkg = fields[1].removeprefix(MODULE)
+            continue
         if len(fields) < 4 or not fields[0].startswith("Benchmark"):
             continue
-        name = PROCS.sub("", fields[0])
+        name = f"{pkg}: {PROCS.sub('', fields[0])}"
         # fields[1] is the iteration count, then (value, unit) pairs.
         rest = fields[2:]
         metrics = out.setdefault(name, {})
@@ -86,8 +98,21 @@ def load_sessions(store):
     return sessions
 
 
+def load_notes(path):
+    """{BenchmarkName: note} from the trailing comments in lib/benches.txt."""
+    notes = {}
+    if not path.exists():
+        return notes
+    for line in path.read_text().splitlines():
+        code, _, note = line.partition("#")
+        if code.split() and note.strip():
+            notes[code.split()[0]] = note.strip()
+    return notes
+
+
 def build(store, out):
     sessions = load_sessions(store)
+    notes = load_notes(Path(__file__).resolve().parent.parent / "lib" / "benches.txt")
     if not sessions:
         sys.exit(f"no sessions found under {store}")
 
@@ -119,6 +144,10 @@ def build(store, out):
 
     data = {
         "retired": retired,
+        # What each benchmark measures, from lib/benches.txt, keyed like series.
+        # A sub-benchmark takes its parent's note.
+        "notes": {n: notes[n.split(": ", 1)[1].split("/")[0]]
+                  for n in names if n.split(": ", 1)[1].split("/")[0] in notes},
         "generated": datetime.now(tz=timezone.utc).isoformat(timespec="seconds"),
         "sessions": [{k: v for k, v in s.items() if k != "results"} for s in sessions],
         "series": series,

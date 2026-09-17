@@ -88,6 +88,10 @@ standard library only and does not need the benchspotter binary.
 
     uv run site/build.py && open site/dist/index.html
 
+Series are keyed by package and name, since a bare name can exist in two packages, and the
+select groups them by package. The line above the chart names the package, links to it upstream
+and repeats the note from `lib/benches.txt`, so the comment there is what the site shows.
+
 Points are in commit order by default, so a tag measured late lands where it belongs in history
 rather than at the end; "order by run date" gives record order, which is the order to read the
 noise sentinel in. Each session carries its commit time as a tag (`lib/backfill-commit-times.sh`

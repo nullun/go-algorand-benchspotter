@@ -33,7 +33,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "site"))
 import build  # noqa: E402  site/build.py: session loading and bench parsing
 
-SENTINEL = "BenchmarkNoiseSentinel"
+SENTINEL = "NoiseSentinel"
 
 
 def runner_of(session):
@@ -106,7 +106,7 @@ def check(store, runner, kind, history, min_pct, spread_factor, unit):
         noise = max([cur[1]] + [s for _, s in prev]) * 100
         stepped = abs(change) > max(min_pct, spread_factor * noise)
         rows.append({
-            "name": name.removeprefix("Benchmark"),
+            "name": name.replace(": Benchmark", " "),
             "value": cur[0], "baseline": baseline, "change": change,
             "noise": noise, "stepped": stepped, "points": len(prev),
         })
@@ -126,7 +126,7 @@ def report(runner, new, rows, unit):
     if new is None:
         return f"Not enough points on {runner} to compare.\n", False
     steps = [r for r in rows if r["stepped"]]
-    machine = any(r["name"].startswith(SENTINEL.removeprefix("Benchmark")) for r in steps)
+    machine = any(SENTINEL in r["name"] for r in steps)
     lines = [f"## {new['label']} ({new['commit']}) on {runner}", ""]
     if not steps:
         lines.append(f"No step in {len(rows)} series.")

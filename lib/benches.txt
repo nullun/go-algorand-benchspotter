@@ -29,8 +29,8 @@ BenchmarkTxHandlerProcessing    # processDecoded and verify.TxnGroup (2 subs)
 BenchmarkTxHandlerDecoderMsgp   # wire decode of a txn group
 BenchmarkAppRateLimiter_TxgroupToKeys   # app rate limiter key derivation, seeded
 BenchmarkStatusCachePut         # pending-txn status cache, the /v2/transactions/pending path
-BenchmarkStatusCacheCheckHit
-BenchmarkStatusCacheCheckMiss
+BenchmarkStatusCacheCheckHit    # lookup of a cached txn status
+BenchmarkStatusCacheCheckMiss   # lookup that misses
 
 # --- AVM (data/transactions/logic) ------------------------------------------
 BenchmarkCheckSignature         # logic.CheckSignature on the TinyMan lsig
@@ -41,14 +41,14 @@ BenchmarkVerify                 # crypto opcodes: ed25519verify_bare, ecdsa k1/r
 
 # --- basics, committee (data/basics, data/committee) -------------------------
 BenchmarkAddressFormatting      # address checksum, every REST round trip
-BenchmarkUnmarshalChecksumAddress
+BenchmarkUnmarshalChecksumAddress   # address decode with checksum
 BenchmarkSortition              # VRF verify plus sortition, per agreement vote, seeded
 
 # --- ledger ------------------------------------------------------------------
 BenchmarkCompactDeltas          # makeCompactAccountDeltas, per commit round
 BenchmarkCowChild               # per-group cow allocation, 0 allocs
 BenchmarkPrefetcherPayment      # account prefetch fan-out ahead of eval
-BenchmarkPrefetcherApps
+BenchmarkPrefetcherApps         # the same for app-call groups
 BenchmarkMakeStateDelta         # per-block delta allocation, 20 MB/op
 BenchmarkOnlineAccountsCacheRead320     # agreement-round online lookups
 BenchmarkBlockEvaluatorRAMNoCrypto      # 50k-txn block through Eval, ~14s setup, ~0.7s/op
@@ -62,8 +62,8 @@ BenchmarkVerify25519            # one verify, libsodium and ed25519consensus sid
 BenchmarkBatchVerifierImpls     # 64-signature batch, libsodium single, libsodium batch, ed25519consensus (3 subs)
 BenchmarkOneTimeSigBatchVerification    # the agreement vote signature, three backends (3 subs)
 BenchmarkVrfVerify              # VRF verify, libsodium; keygen per b.N in untimed setup
-BenchmarkAdd                    # crypto/merkletrie, the catchpoint trie
-BenchmarkDelete
+BenchmarkAdd                    # Trie.Add, the catchpoint trie
+BenchmarkDelete                 # Trie.Delete, the catchpoint trie
 
 # --- network, agreement ----------------------------------------------------------
 BenchmarkGenerateMessageDigest  # per-message dedup hash
@@ -73,7 +73,7 @@ BenchmarkCryptoVerifierProposalVertification   # proposal verify through the exe
 
 # --- util ----------------------------------------------------------------------
 BenchmarkBloomFilterSet         # txsync bloom filters
-BenchmarkBloomFilterTest
+BenchmarkBloomFilterTest        # membership test on the txsync filter
 BenchmarkTagCounter             # metric increment per tagged message
 
 # --- msgp codec (protocol/test) -----------------------------------------------------
