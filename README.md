@@ -7,7 +7,7 @@ has to stay rebaseable on upstream master.
 
 go-algorand needs no changes for any of this. Both scripts clone it read-only into a throwaway
 checkout they own, and the source edits a stable benchmark run needs are applied there (see
-`patches/`).
+`patches/`), as are the benchmarks this repo carries itself (see `benchmarks/`).
 
 ## What is here
 
@@ -18,6 +18,11 @@ checkout they own, and the source edits a stable benchmark run needs are applied
   directive, each built with the toolchain it names.
 - `lib/benches.txt` - the benchmark set, 45 names with a note on what each measures.
 - `lib/check-steps.py` - compares the newest point with the ones before it; the nightly runs it.
+- `benchmarks/` - benchmarks this repo carries that go-algorand does not have yet, one
+  `benchspotter_<topic>_test.go` per topic under the package path it belongs to. They are copied
+  into the checkout before each run, compile-gated per package so an old tag that lacks the code
+  they use simply skips them, and written to upstream standards so that one that proves useful is
+  a copy and a PR away from go-algorand.
 - `patches/` - edits applied to the checkout before benchmarking: the noise sentinel, the
   ed25519 verifier pin, repairs for three upstream benchmarks that fail at master, a rewrite of
   one that could not run and the removal of one that measured nothing (each also a commit on the

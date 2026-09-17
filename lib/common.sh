@@ -31,8 +31,8 @@ bs_clone() {
   git -C "$CHECKOUT" fetch --quiet --tags --force origin || return 1
 }
 
-# bs_prepare <ref> <logdir> <logprefix> - check out ref, clean, patch, pick the
-# toolchain, build libsodium. Echoes nothing; sets BS_GOVERSION, BS_COMMIT,
+# bs_prepare <ref> <logdir> <logprefix> - check out ref, clean, pick the
+# toolchain, build libsodium, patch. Echoes nothing; sets BS_GOVERSION, BS_COMMIT,
 # BS_COMMIT_DATE, BS_DIRECTIVE.
 bs_prepare() {
   local ref="$1" logdir="$2" prefix="$3"
@@ -46,8 +46,6 @@ bs_prepare() {
   BS_COMMIT_DATE="$(git -C "$CHECKOUT" log -1 --format=%cs HEAD)"
   BS_COMMIT_TIME="$(bs_commit_time HEAD)"
   BS_CONSENSUS="$(bs_consensus_version HEAD)"
-
-  bs_apply_patches "$logdir/$prefix.patches.log" || return 1
 
   BS_DIRECTIVE="$(awk '/^toolchain /{print $2}' "$CHECKOUT/go.mod")"
   if [ "$TOOLCHAIN" = pinned ] && [ -n "$BS_DIRECTIVE" ]; then
@@ -68,6 +66,10 @@ bs_prepare() {
   arch="$(cd "$CHECKOUT" && ./scripts/archtype.sh)"
   make -C "$CHECKOUT" "crypto/libs/$os/$arch/lib/libsodium.a" \
     >"$logdir/$prefix.libsodium.log" 2>&1 || return 1
+
+  # After the toolchain and libsodium: patches/zz-compile-gate.sh compiles
+  # every package the patches touched, and that needs both.
+  bs_apply_patches "$logdir/$prefix.patches.log" || return 1
 }
 
 # bs_apply_patches <log> - run every patches/*.sh against the checkout. They
