@@ -104,11 +104,11 @@ still left out because `BenchmarkSignVerify` covers the ed25519 side.
 Each of these panics or fails and takes its whole package's test binary down, which is the
 session-aborting failure mode. The checked ones are fixed twice over: as scripts in `patches/`
 that repair the throwaway checkout, and as commits on the `bench/fix-broken-benchmarks` branch
-of the go-algorand clone at `~/GitHub/algorand/go-algorand` (four: one per fix, plus one that
+of the go-algorand clone at `~/GitHub/algorand/go-algorand` (five: one per fix, plus one that
 moves `benchmarkBlockValidationMix`'s progress output from `fmt.Printf` to `b.Logf`, since it
 landed inside the result line whenever Go ran a second round of iterations and parsers dropped
-the result). The patches skip themselves once the upstream code has the fix. The remaining three
-are not patched because nothing here would trend them.
+the result). The patches skip themselves once the upstream code has the fix. The weights fix is
+on the branch only, and the remaining two are not fixed because nothing here would trend them.
 
 - [x] **The txHandler backlog family** (`BenchmarkHandleTxns`, `HandleTxnGroups`, `HandleMsig*`,
   `HandleBLW*`, `HandleLsigTxnGroups`). `runHandlerBenchmarkWithBacklog` emulates `Start()`
@@ -125,8 +125,12 @@ are not patched because nothing here would trend them.
   that builds the vote for round 300 against a fixture at round 1. Fixed, it is a 35 us benchmark
   of `unauthenticatedVote.verify`, the dominant CPU cost under vote load.
 - [ ] **`BenchmarkCodecEncoder`** (protocol/encodebench_test.go:31) encodes a nil and segfaults.
-- [ ] **`BenchmarkVerifyWeights` and `BenchmarkNumReveals`** (crypto/stateproof/weights_test.go:199,
-  :220) fail on "too many reveals in state proof" unconditionally.
+- [x] **`BenchmarkVerifyWeights` and `BenchmarkNumReveals`** (crypto/stateproof/weights_test.go:199,
+  :220) fail on "too many reveals in state proof" unconditionally: they ask for a 1.1
+  signed-to-proven ratio, which needs more reveals than `MaxReveals` allows, and have done since
+  they were added with the cap. Fixed on the branch with a ratio of 2 (about 0.5 us/op each). Not
+  patched or trended here: the arithmetic they time is a handful of big-integer operations and
+  the state proof cost lives in falcon and the merkle proofs.
 - [ ] **`BenchmarkTransactionPoolRecompute`** (data/pools/transactionPool_test.go:1023) calls
   `FailNow` unless `MaxTxnBytesPerBlock` is 5 MB, allocates b.N pools of 75k txns and sleeps a
   second. Replace it with the pool benchmark in section 3.
