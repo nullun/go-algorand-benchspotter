@@ -104,11 +104,11 @@ still left out because `BenchmarkSignVerify` covers the ed25519 side.
 Each of these panics or fails and takes its whole package's test binary down, which is the
 session-aborting failure mode. The checked ones are fixed twice over: as scripts in `patches/`
 that repair the throwaway checkout, and as commits on the `bench/fix-broken-benchmarks` branch
-of the go-algorand clone at `~/GitHub/algorand/go-algorand` (five: one per fix, plus one that
+of the go-algorand clone at `~/GitHub/algorand/go-algorand` (seven: one per item, plus one that
 moves `benchmarkBlockValidationMix`'s progress output from `fmt.Printf` to `b.Logf`, since it
 landed inside the result line whenever Go ran a second round of iterations and parsers dropped
 the result). The patches skip themselves once the upstream code has the fix. The weights fix is
-on the branch only, and the remaining two are not fixed because nothing here would trend them.
+on the branch only, since nothing here would trend it.
 
 - [x] **The txHandler backlog family** (`BenchmarkHandleTxns`, `HandleTxnGroups`, `HandleMsig*`,
   `HandleBLW*`, `HandleLsigTxnGroups`). `runHandlerBenchmarkWithBacklog` emulates `Start()`
@@ -124,16 +124,20 @@ on the branch only, and the remaining two are not fixed because nothing here wou
   `Verified(AgreementVoteTag)`, which panics since votes moved to `VerifiedVotes()`, and behind
   that builds the vote for round 300 against a fixture at round 1. Fixed, it is a 35 us benchmark
   of `unauthenticatedVote.verify`, the dominant CPU cost under vote load.
-- [ ] **`BenchmarkCodecEncoder`** (protocol/encodebench_test.go:31) encodes a nil and segfaults.
+- [x] **`BenchmarkCodecEncoder`** (protocol/encodebench_test.go:31) encodes a nil and segfaults.
+  Removed, on the branch and by a patch here: repaired it would encode an empty struct, which
+  every generated msgp benchmark already does for a real type.
 - [x] **`BenchmarkVerifyWeights` and `BenchmarkNumReveals`** (crypto/stateproof/weights_test.go:199,
   :220) fail on "too many reveals in state proof" unconditionally: they ask for a 1.1
   signed-to-proven ratio, which needs more reveals than `MaxReveals` allows, and have done since
   they were added with the cap. Fixed on the branch with a ratio of 2 (about 0.5 us/op each). Not
   patched or trended here: the arithmetic they time is a handful of big-integer operations and
   the state proof cost lives in falcon and the merkle proofs.
-- [ ] **`BenchmarkTransactionPoolRecompute`** (data/pools/transactionPool_test.go:1023) calls
+- [x] **`BenchmarkTransactionPoolRecompute`** (data/pools/transactionPool_test.go:1023) calls
   `FailNow` unless `MaxTxnBytesPerBlock` is 5 MB, allocates b.N pools of 75k txns and sleeps a
-  second. Replace it with the pool benchmark in section 3.
+  second. Rewritten, on the branch and by a patch here, as a fixed 5000-txn pool timing
+  `recomputeBlockEvaluator` with nothing committed between iterations: about 110 ms/op, 22 us
+  per txn, reported as `ns/txn` too. Tracked.
 
 The exclusions this repo recorded for `BenchmarkBlockEvaluatorRAM*` and `BenchmarkPrefetcherPayment`
 were partly stale: the `NoCrypto` variants call `Eval` with validation off so the proposer check
@@ -197,9 +201,8 @@ Ordered by production heat divided by effort. All deterministic and CPU-bound un
   `makeMockLedgerForTracker` with 5k accounts and 320 rounds of deltas.
 - [ ] **`roundCowBase` resource lookups and `getKey`** (ledger/eval/eval.go:341, :367, :431), the
   AVM's view of state, with a fake `LedgerForCowBase`.
-- [ ] **Pool `Remember` for groups and `recomputeBlockEvaluator`.** Right-sized replacement for the
-  unusable Recompute benchmark: 5000-txn pool, 1000-txn block, time the recompute only. Fixture
-  lifts from data/pools/transactionPool_test.go:1036-1075.
+- [ ] **Pool `Remember` for groups.** `recomputeBlockEvaluator` is covered by the rewritten
+  `BenchmarkTransactionPoolRecompute` (section 2); the group path of `Remember` still is not.
 - [ ] **`endOfBlock`, knock-offline list generation, `proposerPayout`, `autoHeartbeat`**
   (ledger/eval/eval.go:1446, :1740, :1710, :638). Once per block under payouts, unbenchmarked.
   Needs the proposer-aware `endBlock` helper (ledger/simple_test.go:181).

@@ -31,6 +31,7 @@ BenchmarkAppRateLimiter_TxgroupToKeys   # app rate limiter key derivation, seede
 BenchmarkStatusCachePut         # pending-txn status cache, the /v2/transactions/pending path
 BenchmarkStatusCacheCheckHit    # lookup of a cached txn status
 BenchmarkStatusCacheCheckMiss   # lookup that misses
+BenchmarkTransactionPoolRecompute   # re-evaluate a 5000-txn pool after a block, as OnNewBlock does; needs patches/rewrite-txpool-recompute-benchmark.sh
 
 # --- AVM (data/transactions/logic) ------------------------------------------
 BenchmarkCheckSignature         # logic.CheckSignature on the TinyMan lsig
@@ -87,8 +88,9 @@ BenchmarkAppendMsgBlockHeader   # steps when the header grows (v4.2.1), not when
 # Not here, and why: ROADMAP.md, "Existing but deliberately not tracked".
 # MerkleCommit and MerkleVerify1M are grids over hash family x size.
 # BenchmarkSign (crypto) is covered by SignVerify; the secp256k1 one is the AVM's ecdsa path.
-# BlockEvaluator*Crypto, BlockValidation* and CryptoVerifierVoteVertification
-# fail at upstream master and run here only because patches/ repairs them.
-# The txHandler backlog family is repaired too but not trended: throughput
-# tests with sub-benchmarks per invalid rate and TPS. CodecEncoder and the
-# stateproof weights benchmarks still fail at master; ROADMAP.md has the fixes.
+# BlockEvaluator*Crypto, BlockValidation*, CryptoVerifierVoteVertification and
+# TransactionPoolRecompute fail or cannot run at upstream master and run here
+# only because patches/ repairs or rewrites them. The txHandler backlog family
+# is repaired too but not trended: throughput tests with sub-benchmarks per
+# invalid rate and TPS. CodecEncoder is removed by a patch; the stateproof
+# weights fix is on the go-algorand branch only. ROADMAP.md has the details.
