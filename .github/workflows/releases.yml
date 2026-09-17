@@ -2,18 +2,21 @@ name: releases
 
 # Benchmarks any go-algorand *-stable tag that has no release session yet, and
 # commits the sessions to this repo. The nightly job tracks master; this one is
-# what puts the release points on the trend site. run-sweep.sh does the skipping
-# (SKIP_IF_DONE), so a day with no new release is a no-op that costs a checkout.
+# what puts the release points on the trend site. It runs every hour, and a
+# cheap first job compares upstream's tags with the store; most hours there is
+# nothing new and the run ends there. run-sweep.sh does the skipping too
+# (SKIP_IF_DONE), so a dispatch with nothing to do costs a checkout.
 #
-# The first run on an empty store has every stable tag to do. MAX_TAGS caps a run
-# at six of them, oldest first, so the backlog clears over a few nights instead of
-# in one job that would run into the hosted 6-hour ceiling and commit nothing.
+# MAX_TAGS is 1: one tag per run, oldest first. With the 45-name set a tag is
+# three sessions of ten minutes or more each, and the results are committed
+# only when the run ends, so a run that hits the job time limit loses every
+# tag it measured. A backlog clears one tag an hour.
 
 on:
   schedule:
-    # 10:00 UTC, well clear of the 02:00 nightly. Upstream publishes releases
-    # around 14:30 UTC, so a tag cut today is measured tomorrow morning.
-    - cron: '0 10 * * *'
+    # Every hour, at 35 past, half an hour off the master check. Upstream
+    # publishes releases around 14:30 UTC, so a tag is measured the same day.
+    - cron: '35 * * * *'
   workflow_dispatch:
     inputs:
       tags:
@@ -21,7 +24,7 @@ on:
         default: ''
       max_tags:
         description: most tags to benchmark in this run, 0 for no limit
-        default: '6'
+        default: '1'
       runs:
         description: sessions to record per tag
         default: '3'
@@ -36,7 +39,46 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Is there a stable tag without a release session? Tags older than the oldest
+  # measured one are ignored: they predate the go.mod toolchain directive and
+  # run-sweep.sh would skip them anyway. A dispatch always proceeds.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.check.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          DISPATCH: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ "$DISPATCH" = true ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          upstream="$(git ls-remote --tags https://github.com/algorand/go-algorand.git 'refs/tags/*-stable' \
+            | cut -f2 | sed 's|^refs/tags/||; s|\^{}$||' | sort -u)"
+          [ -n "$upstream" ] || { echo "could not read tags from upstream" >&2; exit 1; }
+          done="$(cat .benchspotter/sessions/*/meta.json \
+            | jq -r -s '[.[] | select(.tags | index("release")) | .name] | unique[]' | sort)"
+          oldest="$(echo "$done" | sort -V | head -1)"
+          # A tag is due if it has no session and is not older than the oldest measured tag.
+          todo=""
+          for t in $(comm -23 <(echo "$upstream") <(echo "$done")); do
+            if [ -z "$oldest" ] || [ "$(printf '%s\n%s\n' "$oldest" "$t" | sort -V | head -1)" = "$oldest" ]; then
+              todo="$todo $t"
+            fi
+          done
+          if [ -z "$todo" ]; then
+            echo "every stable tag since $oldest has a release session"
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "unmeasured stable tags:"; echo "$todo"
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   sweep:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
     runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
     # A GitHub-hosted job is killed at 6 hours whatever this says, and the results
     # are only committed after the last tag, so a run that overruns loses every
@@ -61,7 +103,7 @@ jobs:
           # Through the environment, not interpolated into the script body: a
           # dispatch input is attacker-controlled shell otherwise.
           TAGS: ${{ github.event.inputs.tags }}
-          MAX_TAGS: ${{ github.event.inputs.max_tags || '6' }}
+          MAX_TAGS: ${{ github.event.inputs.max_tags || '1' }}
         # Unquoted on purpose: TAGS is a space-separated list, empty means "all".
         run: ./run-sweep.sh $TAGS
 

@@ -45,9 +45,12 @@ in the store: a commit with a `nightly` session, a tag with a `release` session.
 
 ## The scheduled jobs
 
-`.github/workflows/nightly.yml` runs at 02:00 UTC, benchmarks whatever `origin/master` points
-at, commits the sessions and triggers the site rebuild. It exits without benchmarking if that
-commit already has a nightly session, so a quiet day costs nothing. After the run it compares
+`.github/workflows/nightly.yml` runs every hour. A first job on a hosted runner compares the sha
+`origin/master` points at with the store, using `git ls-remote` and `jq` and nothing else; most
+hours master has not moved and the run ends there in seconds. When it has, the benchmark job
+measures the new commit, commits the sessions and triggers the site rebuild, so master gets one
+point per merge rather than one per day. The sessions keep the `nightly` tag, which is the kind
+the site and the step check know. After the run it compares
 the new point with the seven nightlies before it in commit order on the same runner
 (`lib/check-steps.py`),
 writes the result to the job summary and opens an issue when a series stepped by more than 5%
@@ -58,12 +61,12 @@ with the `profiles` input; they are megabytes per session, so only for a run to 
 first bad nightly commit, it benchmarks every first-parent commit between them, tagged `range`,
 so the step can be pinned to one merge. It refuses ranges over `max_commits` (20).
 
-`.github/workflows/releases.yml` runs at 10:00 UTC and does the same for every `*-stable` tag
-that has no `release` session yet, which is how a new upstream release reaches the site. Most
-days it finds nothing and stops after the checkout. It takes at most `MAX_TAGS` (6) tags in one
-run, oldest first: a GitHub-hosted job is killed at 6 hours and nothing is committed until the
-last tag finishes, so a backlog is better cleared over several nights than lost in one long
-job. The 21 tags that `main` starts with take about four nights.
+`.github/workflows/releases.yml` runs every hour too, half an hour offset, and does the same for
+`*-stable` tags: a cheap first job lists upstream's tags and proceeds only if one newer than the
+oldest measured tag has no `release` session. It takes at most `MAX_TAGS` (1) tag per run: with
+the 45-name set a tag is three sessions of ten minutes or more each, a GitHub-hosted job is
+killed at 6 hours, and nothing is committed until the last tag finishes, so a backlog clears at
+one tag an hour rather than risking a long run that commits nothing.
 
 Both share the `benchmark-runner` concurrency group, so they queue behind each other rather than
 fighting over one machine, and both get their toolchain from `.github/actions/bench-setup`.
@@ -73,7 +76,8 @@ Each job passes the sha it just pushed to `pages.yml`. Without that the site wou
 night behind.
 
 The runner matters more than anything else in this repo. Set the `BENCH_RUNNER` repository
-variable to a self-hosted label on a machine you control and that is otherwise idle at 02:00.
+variable to a self-hosted label on a machine you control and that does nothing else: with the
+hourly schedule a benchmark can start at any hour master moves.
 On a GitHub-hosted runner the neighbours on the same host move the numbers by more than most
 real regressions do: the `AppendMsgBlockHeader` +14% at v4.2.1 and the `processDecoded`
 23us -> 9.7us at v3.27.0 that this archive found would both vanish into that noise. Sessions are

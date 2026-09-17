@@ -28,6 +28,12 @@ Checked items are done. The order within a section is priority.
 - [x] **Wider set, one package at a time.** benchspotter aborts a session when any package's
   `go test` fails, so a new package should be smoke-run at `-count 1` on a dispatch before it
   joins the nightly set.
+- [x] **Noise yardstick.** The band and the step check take the spread of every repeat of every
+  run, since inside-process spread is two to four times the between-process spread on the hosted
+  runner. Three runs of count four stay: the runs guard against a noisy neighbour mid-session,
+  the count is where the noise averages out.
+- [x] **Hourly, when there is something new.** Both workflows run hourly behind a cheap check job
+  that compares upstream with the store; master gets one point per merge. `MAX_TAGS` is 1.
 - [x] **Commit order.** Sessions carry `commit:<utc timestamp>` and the site and step check
   sort on it, with a toggle back to record order. An old tag measured late lands where it
   belongs; the sweep no longer has to run oldest first for the display's sake.

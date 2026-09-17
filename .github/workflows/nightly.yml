@@ -1,15 +1,22 @@
 name: nightly
 
-# Benchmarks whatever algorand/go-algorand master points at, once a night, and
-# commits the session to this repo. go-algorand itself needs no changes: this
-# workflow clones it read-only and any source edits it needs (see patches/) are
-# applied to that throwaway clone.
+# Benchmarks whatever algorand/go-algorand master points at and commits the
+# session to this repo. It runs every hour, and a cheap first job asks whether
+# master has moved since the last session; most hours it has not, and the run
+# ends there in seconds without touching the benchmark runner. go-algorand
+# itself needs no changes: this workflow clones it read-only and any source
+# edits it needs (see patches/) are applied to that throwaway clone.
+#
+# The sessions keep the tag "nightly", which is the kind the site and the step
+# check know; it now means "a master commit", one point per merge.
 
 on:
   schedule:
-    # 02:00 UTC. Pick a time the runner is otherwise idle: benchmark numbers are
-    # only comparable night to night if the machine is.
-    - cron: '0 2 * * *'
+    # Every hour, five past. The check job is what runs hourly; the benchmark
+    # job only when master moved. Numbers are only comparable point to point
+    # if the runner is otherwise idle whenever that happens, which on a
+    # self-hosted machine means a machine that does nothing else.
+    - cron: '5 * * * *'
   workflow_dispatch:
     inputs:
       ref:
@@ -34,7 +41,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Is there anything to do? Compares the sha master points at with the store,
+  # without a go-algorand clone, a toolchain or benchspotter. A dispatch always
+  # proceeds; run-nightly.sh applies the same check to an arbitrary ref anyway.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      needed: ${{ steps.check.outputs.needed }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          DISPATCH: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ "$DISPATCH" = true ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          sha="$(git ls-remote https://github.com/algorand/go-algorand.git refs/heads/master | cut -f1)"
+          [ -n "$sha" ] || { echo "could not read master from upstream" >&2; exit 1; }
+          if cat .benchspotter/sessions/*/meta.json \
+               | jq -e -s --arg c "$sha" 'any(.[]; .git_commit == $c and (.tags | index("nightly")))' >/dev/null; then
+            echo "master is $sha, already measured"
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "master is $sha, no session yet"
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
   bench:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
     # Set the BENCH_RUNNER repository variable to a self-hosted label. On a
     # GitHub-hosted runner the neighbours on the same host move the numbers by
     # more than most real regressions do, so hosted results are worth little
