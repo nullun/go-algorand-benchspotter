@@ -44,6 +44,7 @@ bs_prepare() {
 
   BS_COMMIT="$(git -C "$CHECKOUT" rev-parse --short HEAD)"
   BS_COMMIT_DATE="$(git -C "$CHECKOUT" log -1 --format=%cs HEAD)"
+  BS_COMMIT_TIME="$(bs_commit_time HEAD)"
 
   bs_apply_patches "$logdir/$prefix.patches.log" || return 1
 
@@ -81,13 +82,23 @@ bs_apply_patches() {
   done
 }
 
+# bs_commit_time <ref> - the committer time of ref in the checkout, as a UTC
+# timestamp that sorts as a string: commit:2026-09-15T13:22:01Z is the tag.
+bs_commit_time() {
+  TZ=UTC git -C "$CHECKOUT" log -1 --date=format-local:%Y-%m-%dT%H:%M:%SZ --format=%cd "$1"
+}
+
 # bs_session_meta <id> <name> <note> [tag...] - the fields benchspotter cannot
 # know: its own GoVersion field is runtime.Version() of the benchspotter binary,
 # identical for every session, so the toolchain that built the code is a tag.
+# The commit time is a tag too (commit:<utc timestamp>): a session records only
+# the hash, and the site orders points by when the commit was made, not by when
+# it was measured, so a tag measured late still lands where it belongs.
 bs_session_meta() {
   local id="$1" name="$2" note="$3"; shift 3
   local t
   for t in "$@"; do benchspotter session tag "$id" "$t"; done
+  [ -n "${BS_COMMIT_TIME:-}" ] && benchspotter session tag "$id" "commit:$BS_COMMIT_TIME"
   benchspotter session note "$id" "$note"
 }
 
