@@ -314,6 +314,8 @@ fetch("data.json").then(r => r.json()).then(data => {
 
   const runners = [...new Set(data.sessions.map(runnerOf))].sort();
   $("runner").innerHTML = runners.map(r => `<option>${r}</option>`).join("");
+  // Default to the machine that produced the newest session, the live series.
+  $("runner").value = runnerOf(data.sessions[data.sessions.length - 1]);
   $("runners").hidden = runners.length < 2;
   $("runner").addEventListener("change", draw);
 
