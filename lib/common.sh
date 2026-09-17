@@ -45,6 +45,7 @@ bs_prepare() {
   BS_COMMIT="$(git -C "$CHECKOUT" rev-parse --short HEAD)"
   BS_COMMIT_DATE="$(git -C "$CHECKOUT" log -1 --format=%cs HEAD)"
   BS_COMMIT_TIME="$(bs_commit_time HEAD)"
+  BS_CONSENSUS="$(bs_consensus_version HEAD)"
 
   bs_apply_patches "$logdir/$prefix.patches.log" || return 1
 
@@ -88,6 +89,14 @@ bs_commit_time() {
   TZ=UTC git -C "$CHECKOUT" log -1 --date=format-local:%Y-%m-%dT%H:%M:%SZ --format=%cd "$1"
 }
 
+# bs_consensus_version <ref> - ConsensusCurrentVersion at ref, as "v42". A bump
+# moves the ledger benchmarks at once (new rules, payouts, heartbeats), so the
+# site draws a rule there, like it does for a toolchain change.
+bs_consensus_version() {
+  git -C "$CHECKOUT" show "$1:protocol/consensus.go" 2>/dev/null \
+    | sed -n 's/^const ConsensusCurrentVersion = ConsensusV\([0-9][0-9]*\)$/v\1/p'
+}
+
 # bs_session_meta <id> <name> <note> [tag...] - the fields benchspotter cannot
 # know: its own GoVersion field is runtime.Version() of the benchspotter binary,
 # identical for every session, so the toolchain that built the code is a tag.
@@ -99,6 +108,7 @@ bs_session_meta() {
   local t
   for t in "$@"; do benchspotter session tag "$id" "$t"; done
   [ -n "${BS_COMMIT_TIME:-}" ] && benchspotter session tag "$id" "commit:$BS_COMMIT_TIME"
+  [ -n "${BS_CONSENSUS:-}" ] && benchspotter session tag "$id" "consensus:$BS_CONSENSUS"
   benchspotter session note "$id" "$note"
 }
 

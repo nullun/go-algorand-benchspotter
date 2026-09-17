@@ -77,11 +77,13 @@ def load_sessions(store):
         # commit:<utc timestamp>, set by the scripts (lib/common.sh). A session
         # without one (none should remain) sorts by the time it was recorded.
         commit_time = next((t[len("commit:"):] for t in tags if t.startswith("commit:")), None)
+        consensus = next((t[len("consensus:"):] for t in tags if t.startswith("consensus:")), None)
         sessions.append(
             {
                 "id": d.name,
                 "time": session_time(d.name).isoformat(),
                 "commit_time": commit_time,
+                "consensus": consensus,
                 "name": meta.get("name", d.name),
                 "commit": (meta.get("git_commit") or "")[:10],
                 "tags": tags,

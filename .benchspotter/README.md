@@ -15,7 +15,7 @@ Session tags carry what benchspotter cannot record itself. Its `go_version` fiel
 built the code under test is a tag (`go1.21.10`), alongside the kind (`release`, `nightly`, or
 `range` for a commit between two nightlies measured by the range workflow), `run1`..`runN`, the
 machine (`runner:...`), the commit time (`commit:2026-09-15T19:19:14Z`, UTC, what the site orders
-by) and `partial` for a session where one package failed.
+by), the consensus version at that commit (`consensus:v42`) and `partial` for a session where one package failed.
 
 Everything in this store was measured by GitHub Actions. The 2026-09-14 Apple M2 Pro sweep over
 20 stable tags lives on the `archive/macbook-sweep` branch and is frozen there: different

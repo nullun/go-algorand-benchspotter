@@ -124,6 +124,7 @@ const median = xs => {
 };
 const runnerOf = s => s.tags.find(t => t.startsWith("runner:")) || "runner:?";
 const goOf = s => s.tags.find(t => /^go\d/.test(t)) || "";
+const consensusOf = s => s.consensus || "";
 // The sentinel series come from a benchmark that does not depend on go-algorand
 // (patches/add-noise-sentinel.sh): when they move, the machine did.
 const SENTINEL = "BenchmarkNoiseSentinelHash";
@@ -239,16 +240,20 @@ function draw() {
     parts.push(`<path class="band" d="${top}${bottom}Z"/>`);
   }
 
-  // A rule where the Go toolchain that built the code changed: every series
-  // tends to step there at once, and that is the compiler, not go-algorand.
-  points.forEach((p, k) => {
-    if (!k) return;
-    const go = goOf(DATA.sessions[p.g.idx[0]]), prev = goOf(DATA.sessions[points[k - 1].g.idx[0]]);
-    if (!go || !prev || go === prev) return;
-    const x = px(k).toFixed(1);
-    parts.push(`<line class="rule" x1="${x}" y1="${T}" x2="${x}" y2="${H - B}"/>`);
-    parts.push(`<text class="rulelabel" x="${x}" y="${T + 10}" dx="3">${go}</text>`);
-  });
+  // A rule where the Go toolchain that built the code changed (every series
+  // tends to step there at once, and that is the compiler) and where the
+  // consensus version changed (new rules land in the ledger benchmarks).
+  const rules = [[goOf, T + 10], [consensusOf, H - B - 6]];
+  for (const [of, y] of rules) {
+    points.forEach((p, k) => {
+      if (!k) return;
+      const cur = of(DATA.sessions[p.g.idx[0]]), prev = of(DATA.sessions[points[k - 1].g.idx[0]]);
+      if (!cur || !prev || cur === prev) return;
+      const x = px(k).toFixed(1);
+      parts.push(`<line class="rule" x1="${x}" y1="${T}" x2="${x}" y2="${H - B}"/>`);
+      parts.push(`<text class="rulelabel" x="${x}" y="${y}" dx="3">${of === goOf ? cur : "consensus " + cur}</text>`);
+    });
+  }
   if (showSentinel) {
     const d = points.map((p, k) => p.s == null ? "" : `${k && points[k - 1].s != null ? "L" : "M"}${px(k).toFixed(1)},${py(p.s).toFixed(1)}`).join("");
     parts.push(`<path class="sentinel" d="${d}"/>`);

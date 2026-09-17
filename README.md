@@ -98,11 +98,13 @@ and repeats the note from `lib/benches.txt`, so the comment there is what the si
 
 Points are in commit order by default, so a tag measured late lands where it belongs in history
 rather than at the end; "order by run date" gives record order, which is the order to read the
-noise sentinel in. Each session carries its commit time as a tag (`lib/backfill-commit-times.sh`
-added it to the sessions that predate this), and the step check uses the same order.
+noise sentinel in. Each session carries its commit time as a tag (`lib/backfill-tags.sh` added it to
+the sessions that predate this), and the step check uses the same order.
 
 The chart draws a dashed rule where the Go toolchain that built the code changed, since every
-series tends to step there at once. Clicking a point opens the upstream compare view between
+series tends to step there at once, and another where `ConsensusCurrentVersion` changed, which
+is when new rules land in the ledger benchmarks. Both come from session tags the scripts record
+(`go1.25.3`, `consensus:v42`); `lib/backfill-tags.sh` adds them to older sessions. Clicking a point opens the upstream compare view between
 it and the previous point, which is the list of PRs that could have moved it. The noise
 sentinel toggle overlays the sentinel's relative movement on the current series (see below).
 
