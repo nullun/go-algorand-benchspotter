@@ -16,9 +16,12 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 - `run-nightly.sh` - one set of sessions against a single ref, by default `origin/master`.
 - `run-sweep.sh` - the historical sweep over the stable tags that carry a go.mod toolchain
   directive, each built with the toolchain it names.
-- `lib/benches.txt` - the benchmark set, with notes on what is deliberately excluded and why.
-- `patches/` - edits applied to the checkout before benchmarking.
+- `lib/benches.txt` - the benchmark set, 45 names with a note on what each measures.
+- `lib/check-steps.py` - compares the newest point with the ones before it; the nightly runs it.
+- `patches/` - edits applied to the checkout before benchmarking, and the noise sentinel.
 - `site/` - a static trend viewer published to GitHub Pages.
+- `ROADMAP.md` - the survey of every benchmark upstream: what is tracked, what was left out
+  and why, what is broken at master, and what is worth writing next.
 
 ## Running it
 
@@ -30,8 +33,8 @@ go.mod toolchain directive of the ref under test decides the Go that actually co
     ./run-sweep.sh                        # every stable tag, oldest first, ~22 min each
     ./run-sweep.sh v5.0.0-stable v5.0.1-stable
 
-Both take `RUNS`, `COUNT`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT`, `REMOTE` and `SKIP_IF_DONE`; the
-header of each script lists them. `SKIP_IF_DONE=1` is the default and drops work that is already
+Both take `RUNS`, `COUNT`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT`, `REMOTE` and `SKIP_IF_DONE`, and
+the nightly also `KIND` and `PROFILES`; the header of each script lists them. `SKIP_IF_DONE=1` is the default and drops work that is already
 in the store: a commit with a `nightly` session, a tag with a `release` session. Pass
 `SKIP_IF_DONE=0` to measure something a second time. Results go to `.benchspotter` unless
 `BENCHSPOTTER_PATH` says otherwise.
@@ -44,7 +47,15 @@ in the store: a commit with a `nightly` session, a tag with a `release` session.
 
 `.github/workflows/nightly.yml` runs at 02:00 UTC, benchmarks whatever `origin/master` points
 at, commits the sessions and triggers the site rebuild. It exits without benchmarking if that
-commit already has a nightly session, so a quiet day costs nothing.
+commit already has a nightly session, so a quiet day costs nothing. After the run it compares
+the new point with the previous seven nightlies on the same runner (`lib/check-steps.py`),
+writes the result to the job summary and opens an issue when a series stepped by more than 5%
+and more than twice its run-to-run spread. A dispatch can add cpu or mem profiles to the run
+with the `profiles` input; they are megabytes per session, so only for a run to drill into.
+
+`.github/workflows/range.yml` is for the morning after a step: given the last good and the
+first bad nightly commit, it benchmarks every first-parent commit between them, tagged `range`,
+so the step can be pinned to one merge. It refuses ranges over `max_commits` (20).
 
 `.github/workflows/releases.yml` runs at 10:00 UTC and does the same for every `*-stable` tag
 that has no `release` session yet, which is how a new upstream release reaches the site. Most
@@ -76,6 +87,11 @@ standard library only and does not need the benchspotter binary.
 
     uv run site/build.py && open site/dist/index.html
 
+The chart draws a dashed rule where the Go toolchain that built the code changed, since every
+series tends to step there at once. Clicking a point opens the upstream compare view between
+it and the previous point, which is the list of PRs that could have moved it. The noise
+sentinel toggle overlays the sentinel's relative movement on the current series (see below).
+
 `.github/workflows/pages.yml` publishes it. Enable Pages for the repo with "GitHub Actions" as
 the source, and give Actions write permission to contents (Settings > Actions > General) or the
 results commit cannot be pushed. The benchmark jobs call the pages workflow directly, because a
@@ -105,6 +121,12 @@ was in use and `MerkleCommit` moves 7-25% between repeats of the same tag there,
 for the six that ran overnight. A shared GitHub runner is noisier again. Read nothing into a step
 smaller than the spread of its own point, which the site draws as the band around the line.
 
+`NoiseSentinelHash` and `NoiseSentinelLoop` are not go-algorand code. `patches/add-noise-sentinel.sh`
+adds them to the checkout: a sha256 over a fixed buffer and a dependent integer loop, the same
+work at every ref. When they move, the machine did, and a step every other series took with
+them is the runner rather than upstream. `lib/check-steps.py` says so in its report, and the
+site can overlay them on any series.
+
 Known artefacts, all worth checking before believing a jump:
 
 - `data/transactions/verify/txn_test.go` has picked the ed25519 batch verifier on a coin toss in
@@ -113,6 +135,10 @@ Known artefacts, all worth checking before believing a jump:
   pins it to the Go implementation, which is what algod has defaulted to since v4.4.1. The v3 and
   v4 sessions in the M2 Pro archive predate the patch and are mostly libsodium numbers, so they
   are not comparable to production and not comparable to each other tag by tag.
+- The set grew from 6 names to 45 on 2026-09-17, so most series start there. Names that do
+  not exist at a tag are skipped, and `BenchmarkPay` and `BenchmarkAppInt1` fail on the missing
+  proposer at tags before v5, so a release sweep of an old tag would abort; the old tags are
+  already measured.
 - `MerkleCommit` is not recorded from 2026-09-15 on. Its 3 x 5 x 5 grid of hash family x Item x
   Count produced 45 of the 52 series in the archive, they all moved together, and they were most
   of the run time of a session. The archive branch still has them and its site marks them as no

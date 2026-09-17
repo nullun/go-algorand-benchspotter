@@ -16,9 +16,9 @@ Checked items are done. The order within a section is priority.
 - [x] **Step detection in CI.** Compare the newest point's median per series against the previous
   few points on the same runner, write a table to the job summary, and open an issue when a step
   exceeds the point's own spread. `site/build.py` already computes the medians.
-- [ ] **Toolchain rules on the chart.** A go.mod toolchain bump moves every series at once. The
+- [x] **Toolchain rules on the chart.** A go.mod toolchain bump moves every series at once. The
   Go version is already a session tag, so the site can draw a rule at each change.
-- [ ] **Compare links.** The tooltip links to the GitHub compare view between the previous
+- [x] **Compare links.** The tooltip links to the GitHub compare view between the previous
   point's commit and this one, which is the list of PRs that could have caused a step.
 - [x] **Range dispatch.** Master often merges several PRs a day and the nightly is one point. A
   workflow that takes two refs and benchmarks every first-parent commit between them fills the
