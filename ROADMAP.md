@@ -34,6 +34,8 @@ Checked items are done. The order within a section is priority.
   the count is where the noise averages out.
 - [x] **Hourly, when there is something new.** Both workflows run hourly behind a cheap check job
   that compares upstream with the store; master gets one point per merge. `MAX_TAGS` is 1.
+- [x] **Benchmarks of our own.** `benchmarks/` carries benchmarks go-algorand does not have,
+  copied in and compile-gated per package before each run (section 3).
 - [x] **Commit order.** Sessions carry `commit:<utc timestamp>` and the site and step check
   sort on it, with a toggle back to record order. An old tag measured late lands where it
   belongs; the sweep no longer has to run oldest first for the display's sake.
@@ -149,53 +151,72 @@ never runs, and the prefetcher benchmarks never build a block. Both are tracked 
 
 Ordered by production heat divided by effort. All deterministic and CPU-bound unless noted.
 
+Checked items exist in this repo under `benchmarks/<package path>/benchspotter_<topic>_test.go`,
+written to upstream standards (licence header, in-package, gofmt, `go vet`) and copied into the
+checkout by `patches/add-benchmarks.sh`, which compiles each package it touches and drops the
+files where they do not build, so old tags skip them. They are tracked in `lib/benches.txt` with
+the note `(benchmarks/)`. The plan is to let them run, and upstream the ones that prove useful,
+which a benchmark does by moving when a real change lands in its area. Notes on what was found
+while writing them:
+
+- `apply.Payment` is left out of `BenchmarkApply`: the mock `Balances` does not move balances, so
+  it would measure call overhead. The other three apply calls are covered.
+- `BenchmarkTxTailCheckDup` disables go-deadlock detection for its duration, as evalbench does;
+  with it on, the mutex stack capture is 70x the work being measured. Release algod runs without it.
+- `BenchmarkStateOps` and `BenchmarkBoxOps` include the package's mock ledger cost (it clones the
+  state map per call). Deterministic, so the trend holds, but the absolute figures are not algod's.
+- The `data/transactions` and `data/bookkeeping` files cannot import `txntest` (import cycle), so
+  their fixtures are struct literals, duplicated between the two packages.
+- `BenchmarkAssemble` and `Disassemble` are `package logic_test`, as evalBench_test.go is, because
+  `txntest` imports `logic`.
+
 ### An hour or less each
 
-- [ ] **Falcon verify and sign.** `FalconVerifier.VerifyBytes` (crypto/falconWrapper.go:109) runs
+- [x] **Falcon verify and sign.** `FalconVerifier.VerifyBytes` (crypto/falconWrapper.go:109) runs
   once per revealed participant per state proof; nothing benchmarks it. One signer in setup.
-- [ ] **`merklesignature.Verifier.VerifyBytes`** (crypto/merklesignature/merkleSignatureScheme.go:266),
+- [x] **`merklesignature.Verifier.VerifyBytes`** (crypto/merklesignature/merkleSignatureScheme.go:266),
   the full per-participant state proof check. `New(0, 512, 256)` gives a 60 ms setup.
-- [ ] **VRF prove** (`VrfPrivkey.proveBytes`, crypto/vrf.go:99). Verify is covered, prove is not,
+- [x] **VRF prove** (`VrfPrivkey.proveBytes`, crypto/vrf.go:99). Verify is covered, prove is not,
   and every eligible account runs it each agreement step. Write it with b.N-independent setup.
-- [ ] **`MultisigVerify` and `MultisigBatchPrep`** (crypto/multisig.go:231, :243). No multisig
+- [x] **`MultisigVerify` and `MultisigBatchPrep`** (crypto/multisig.go:231, :243). No multisig
   benchmark exists. Subs for a 3-of-5 direct and batched.
-- [ ] **`txTail.checkDup`** (ledger/txtail.go:352). Every incoming transaction hits it through the
+- [x] **`txTail.checkDup`** (ledger/txtail.go:352). Every incoming transaction hits it through the
   pool. Populate 1000 rounds with the loop at ledger/txtail_test.go:425; time a hit and a miss.
-- [ ] **`Transaction.WellFormed`** (data/transactions/transaction.go:369). Per txn in verification
+- [x] **`Transaction.WellFormed`** (data/transactions/transaction.go:369). Per txn in verification
   and in the pool. Subs per transaction type.
-- [ ] **`SignedTxn.ID` and `TxGroup` hashing** (data/transactions/signedtxn.go:64, transaction.go:176).
+- [x] **`SignedTxn.ID` and `TxGroup` hashing** (data/transactions/signedtxn.go:64, transaction.go:176).
   `Txn.ID` is covered by `BenchmarkEncoding/ID`; the group hash is not.
-- [ ] **`HashObj` on a real `Transaction` and `BlockHeader`.** `BenchmarkHash` hashes 32 raw bytes
+- [x] **`HashObj` on a real `Transaction` and `BlockHeader`.** `BenchmarkHash` hashes 32 raw bytes
   and misses the msgp `ToBeHashed` cost. Lives in data/transactions to avoid the import cycle.
-- [ ] **Realistic msgp round trips** with populated pay, appl-with-boxes, `Block` and
+- [x] **Realistic msgp round trips** with populated pay, appl-with-boxes, `Block` and
   `unauthenticatedVote` fixtures, so the codec line means something.
-- [ ] **`makeCompactResourceDeltas`** as a `resource-deltas` sub next to the existing
+- [x] **`makeCompactResourceDeltas`** as a `resource-deltas` sub next to the existing
   `account-deltas` at ledger/acctupdates_test.go:1285.
-- [ ] **`AccountDeltas.Upsert`, `MergeAccounts`, `OptimizeAllocatedMemory`**
+- [x] **`AccountDeltas.Upsert`, `MergeAccounts`, `OptimizeAllocatedMemory`**
   (ledger/ledgercore/statedelta.go:495, :445, :573). Only the `make()` sizing is benchmarked.
-- [ ] **vpack vote compression and decompression** (network/msgCompressor.go:69,
+- [x] **vpack vote compression and decompression** (network/msgCompressor.go:69,
   network/vpack/vpack.go:233). Runs on every vote sent and received; the package has fuzzers and
   no benchmark. Encode one vote to msgp once, loop compress and decompress with a reused buffer.
-- [ ] **`unauthenticatedVote.verify`** (agreement/vote.go:105) synchronously, without the
+- [x] **`unauthenticatedVote.verify`** (agreement/vote.go:105) synchronously, without the
   execpool, on the 100-account fixture.
-- [ ] **`messageFilter.CheckIncomingMessage`** (network/messageFilter.go:48) at capacity, hit and
+- [x] **`messageFilter.CheckIncomingMessage`** (network/messageFilter.go:48) at capacity, hit and
   miss. The existing benchmark covers only the hash.
-- [ ] **`logic.AssembleString` and `Disassemble`** (data/transactions/logic/assembler.go:2993, :3472).
+- [x] **`logic.AssembleString` and `Disassemble`** (data/transactions/logic/assembler.go:2993, :3472).
   Every AVM benchmark assembles a 2000-op program in setup, so assembler regressions inflate
   their wall clock without showing in ns/op.
-- [ ] **`LogicSigSanityCheck`** (data/transactions/verify/txn.go:413) via `PrepareGroupContext` on
+- [x] **`LogicSigSanityCheck`** (data/transactions/verify/txn.go:413) via `PrepareGroupContext` on
   the TinyMan group.
-- [ ] **`apply.Payment`, `AssetTransfer`, `Keyreg`, `ApplicationCall`** (ledger/apply). The package
+- [x] **`apply.Payment`, `AssetTransfer`, `Keyreg`, `ApplicationCall`** (ledger/apply). The package
   has zero benchmarks and `mockBalances_test.go` already provides the fixture.
 
 ### Half a day to a day each
 
-- [ ] **Stateful AVM opcodes.** The largest hole in the tree. No benchmark touches
+- [x] **Stateful AVM opcodes.** The largest hole in the tree. No benchmark touches
   `app_global_*`, `app_local_*`, `asset_holding_get`, `asset_params_get`, `acct_params_get`,
   `block`, `online_stake`, or any box op (data/transactions/logic/box.go). The `MakeTestApp`
   harness in evalStateful_test.go gives the fixture; shape it like `benchmarkOperation`
   (eval_test.go:4002) through `EvalApp`.
-- [ ] **Inner transactions.** `itxn_begin/field/submit/next` have zero benchmarks and dominate
+- [x] **Inner transactions.** `itxn_begin/field/submit/next` have zero benchmarks and dominate
   modern app call cost. Subs for inner pay, axfer and appl.
 - [ ] **Tracker stack lookups.** `accountUpdates.lookupLatest`, `lookupResource`, `lookupKv`
   (ledger/acctupdates.go:1013, :1237, :358) are the per-txn read path and the REST accounts

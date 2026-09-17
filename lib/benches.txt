@@ -10,9 +10,10 @@
 # a session's run time), and nothing that opens sockets or sleeps. ROADMAP.md
 # lists what was considered and left out, and why.
 #
-# Every name here ran at master (8cd5eb5f6, 2026-09-15) in one session of 217s
-# at -count 1 on an M2 Pro, 55 series. Names marked "since" do not exist at the
-# older stable tags and are skipped there.
+# Every name here ran at master (8cd5eb5f6, 2026-09-15) on an M2 Pro. Names
+# marked "since" do not exist at the older stable tags and are skipped there.
+# Names marked "(benchmarks/)" are this repo's own, copied into the checkout by
+# patches/add-benchmarks.sh and dropped again at a tag where they do not compile.
 
 # --- noise sentinel (patches/add-noise-sentinel.sh, not go-algorand code) ----
 # Fixed work that does not depend on the ref. If these move, the machine did.
@@ -23,6 +24,7 @@ BenchmarkNoiseSentinelLoop
 BenchmarkTxn                    # one signed txn through verify, the ed25519 path
 BenchmarkPaysetGroups           # a block's groups through the verify execpool
 BenchmarkTinyMan                # a real mainnet swap group: lsig eval, group check (3 subs)
+BenchmarkLogicSigSanityCheck    # LogicSigSanityCheck on the TinyMan escrow lsig: version, size, CheckSignature, hash compare (benchmarks/)
 
 # --- txn handler and pool (data, data/pools) ---------------------------------
 BenchmarkTxHandlerProcessing    # processDecoded and verify.TxnGroup (2 subs)
@@ -31,7 +33,13 @@ BenchmarkAppRateLimiter_TxgroupToKeys   # app rate limiter key derivation, seede
 BenchmarkStatusCachePut         # pending-txn status cache, the /v2/transactions/pending path
 BenchmarkStatusCacheCheckHit    # lookup of a cached txn status
 BenchmarkStatusCacheCheckMiss   # lookup that misses
-BenchmarkTransactionPoolRecompute   # re-evaluate a full block's worth of pending txns (28.6k at 5 MB) as OnNewBlock does, ~0.7s/op; needs patches/rewrite-txpool-recompute-benchmark.sh
+BenchmarkTransactionPoolRecompute   # since v5 (older tags lack rememberOne); re-evaluate a full block's worth of pending txns (28.6k at 5 MB) as OnNewBlock does, ~0.7s/op; needs patches/rewrite-txpool-recompute-benchmark.sh
+
+# --- transactions (data/transactions, data/bookkeeping) ------------------------
+BenchmarkWellFormed             # Transaction.WellFormed per txn type, the stateless check on pool entry and in eval (5 subs) (benchmarks/)
+BenchmarkTxnIDs                 # SignedTxn.ID and the group ID of a 16-txn group (2 subs) (benchmarks/)
+BenchmarkHashObj                # crypto.HashObj of a populated txn and block header, the block hash (2 subs) (benchmarks/)
+BenchmarkCodecRealistic         # msgp encode and decode of populated signed pay, signed appl and block header (6 subs) (benchmarks/)
 
 # --- AVM (data/transactions/logic) ------------------------------------------
 BenchmarkCheckSignature         # logic.CheckSignature on the TinyMan lsig
@@ -39,6 +47,11 @@ BenchmarkCheckx5                # CheckSignature over five real programs
 BenchmarkAddx64                 # interpreter dispatch, add x64 at two stack depths (2 subs)
 BenchmarkNopPassx1              # smallest program that passes
 BenchmarkVerify                 # crypto opcodes: ed25519verify_bare, ecdsa k1/r1, falcon_verify, vrf_verify, plus pop and add (7 subs)
+BenchmarkStateOps               # app_global/app_local get/put/del, asset_holding_get, asset/app/acct_params_get through EvalApp, 1000 per eval (10 subs) (benchmarks/)
+BenchmarkBoxOps                 # box_get/len/extract/replace/splice/put/resize and create+del on a 64-byte box, 1000 per eval (8 subs) (benchmarks/)
+BenchmarkInnerTxn               # EvalApp of an app submitting one inner pay, axfer or appl (3 subs) (benchmarks/)
+BenchmarkAssemble               # logic.AssembleString of the TinyMan v4 lsig (benchmarks/)
+BenchmarkDisassemble            # logic.Disassemble of the same program (benchmarks/)
 
 # --- basics, committee (data/basics, data/committee) -------------------------
 BenchmarkAddressFormatting      # address checksum, every REST round trip
@@ -58,6 +71,10 @@ BenchmarkBlockValidationJustPayNoNew    # Eval plus AddBlock of payment blocks b
 BenchmarkBlockValidationMix             # the same with payments, assets and app calls, new accounts included
 BenchmarkPay                    # full payment blocks under ConsensusFuture; since v5, fails on proposer at older tags
 BenchmarkAppInt1                # full app-call blocks, same harness
+BenchmarkTxTailCheckDup         # txTail.checkDup hit and miss on 1000 rounds of txids, every incoming txn's dedup (2 subs) (benchmarks/)
+BenchmarkCompactResourceDeltas  # makeCompactResourceDeltas over 320 rounds of asset and app deltas, the resource half of a commit (benchmarks/)
+BenchmarkAccountDeltasOps       # AccountDeltas Upsert, MergeAccounts, OptimizeAllocatedMemory on ~4000 entries (3 subs) (benchmarks/)
+BenchmarkApply                  # apply.AssetTransfer, Keyreg, ApplicationCall against the mock Balances (3 subs) (benchmarks/)
 
 # --- crypto --------------------------------------------------------------------
 BenchmarkHash                   # crypto.Hash of 32 bytes, sha512_256
@@ -68,6 +85,11 @@ BenchmarkOneTimeSigBatchVerification    # the agreement vote signature, three ba
 BenchmarkVrfVerify              # VRF verify, libsodium; keygen per b.N in untimed setup
 BenchmarkAdd                    # Trie.Add, the catchpoint trie
 BenchmarkDelete                 # Trie.Delete, the catchpoint trie
+BenchmarkFalconVerify           # Falcon-1024 verify, once per revealed participant per state proof (benchmarks/)
+BenchmarkFalconSign             # Falcon-1024 sign, ~6 ms, once per state proof round per participant (benchmarks/)
+BenchmarkMerkleSignatureVerify  # merklesignature.Verifier.VerifyBytes: vector commitment path plus falcon, the full per-participant check (benchmarks/)
+BenchmarkVrfProve               # VRF prove, once per sortition attempt per account (benchmarks/)
+BenchmarkMultisigVerify         # MultisigVerify of a 3-of-5 multisig, three ed25519 verifies in a batch (benchmarks/)
 
 # --- network, agreement ----------------------------------------------------------
 BenchmarkGenerateMessageDigest  # per-message dedup hash
@@ -75,6 +97,9 @@ BenchmarkRouterUpdate           # agreement event routing, 0 allocs (2 subs)
 BenchmarkVoteDecoding           # decode a signed vote
 BenchmarkCryptoVerifierProposalVertification   # proposal verify through the execpool
 BenchmarkCryptoVerifierVoteVertification       # vote verify: VRF, sortition, one-time signature; needs patches/fix-vote-verifier-benchmark.sh
+BenchmarkVoteVerify             # unauthenticatedVote.verify synchronously, without the execpool (benchmarks/)
+BenchmarkVpackVote              # vpack compress and decompress of one vote, every vote on the wire (2 subs) (benchmarks/)
+BenchmarkMessageFilterCheck     # messageFilter.CheckIncomingMessage hit and miss at capacity, every incoming message's dedup (2 subs) (benchmarks/)
 
 # --- util ----------------------------------------------------------------------
 BenchmarkBloomFilterSet         # txsync bloom filters
