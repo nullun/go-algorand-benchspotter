@@ -24,12 +24,12 @@ on:
         description: refuse to start if the range has more commits than this
         default: '20'
 
-concurrency:
-  group: benchmark-runner
-  cancel-in-progress: false
-
 jobs:
   range:
+    # Same group as the master bench job; see master.yml.
+    concurrency:
+      group: benchmark-runner
+      cancel-in-progress: false
     runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 330
     permissions:

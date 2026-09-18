@@ -87,8 +87,12 @@ the 67-name set a tag is three sessions of ten minutes or so each, a GitHub-host
 killed at 6 hours, and nothing is committed until the last tag finishes, so a backlog clears at
 one tag an hour rather than risking a long run that commits nothing.
 
-Both share the `benchmark-runner` concurrency group, so they queue behind each other rather than
-fighting over one machine, and both get their toolchain from `.github/actions/bench-setup`.
+The benchmark jobs of both (and of the range workflow) share the `benchmark-runner` concurrency
+group, so they queue behind each other rather than fighting over one machine, while the cheap
+hourly check jobs run regardless. GitHub keeps one pending job per group and cancels the older
+one when another arrives, so a scheduled release sweep waiting behind a long dispatch can be
+cancelled by a master benchmark; the next hourly run picks the backlog up again. Both get their
+toolchain from `.github/actions/bench-setup`.
 
 Each job passes the sha it just pushed to `pages.yml`. Without that the site would build from
 `github.sha`, which is fixed before the results commit exists, and every build would be one

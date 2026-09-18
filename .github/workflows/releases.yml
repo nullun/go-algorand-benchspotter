@@ -33,11 +33,6 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  # Shared with master: never two benchmark runs on one machine at the same time.
-  group: benchmark-runner
-  cancel-in-progress: false
-
 # The oldest tag the sweep measures. run-sweep.sh has the same default; tags
 # before it build with Go 1.17 and older and have far fewer of the tracked
 # benchmarks (README, "The scheduled jobs").
@@ -90,6 +85,12 @@ jobs:
   sweep:
     needs: check
     if: needs.check.outputs.needed == 'true'
+    # Same group as the master bench job; see master.yml. A scheduled sweep
+    # waiting here is cancelled if a master bench job arrives, and the next
+    # hourly run picks the backlog up again.
+    concurrency:
+      group: benchmark-runner
+      cancel-in-progress: false
     runs-on: ${{ vars.BENCH_RUNNER || 'ubuntu-latest' }}
     # A GitHub-hosted job is killed at 6 hours whatever this says, and the results
     # are only committed after the last tag, so a run that overruns loses every

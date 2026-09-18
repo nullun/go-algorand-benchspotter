@@ -37,11 +37,6 @@ on:
           mutex). Megabytes per session, so only for a run you will drill into.
         default: ''
 
-concurrency:
-  # Never two benchmark runs on one machine at the same time.
-  group: benchmark-runner
-  cancel-in-progress: false
-
 jobs:
   # Is there anything to do? Compares the sha master points at with the store,
   # without a go-algorand clone, a toolchain or benchspotter. A dispatch always
@@ -80,6 +75,15 @@ jobs:
   bench:
     needs: check
     if: needs.check.outputs.needed == 'true'
+    # Never two benchmark jobs on one machine at the same time: this group is
+    # shared by the master, releases and range benchmark jobs. It sits on the
+    # job, not the workflow, so the cheap hourly check jobs run while a sweep
+    # is in progress instead of queueing behind it. GitHub keeps one pending
+    # run per group and cancels the older one when another arrives, so at
+    # workflow level every hourly check cancelled whatever was waiting.
+    concurrency:
+      group: benchmark-runner
+      cancel-in-progress: false
     # Set the BENCH_RUNNER repository variable to a self-hosted label. On a
     # GitHub-hosted runner the neighbours on the same host move the numbers by
     # more than most real regressions do, so hosted results are worth little
