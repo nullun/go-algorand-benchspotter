@@ -62,8 +62,8 @@ BenchmarkSortition              # VRF verify plus sortition, per agreement vote,
 # --- ledger ------------------------------------------------------------------
 BenchmarkCompactDeltas          # makeCompactAccountDeltas, per commit round
 BenchmarkCowChild               # per-group cow allocation, 0 allocs
-BenchmarkPrefetcherPayment      # account prefetch fan-out ahead of eval
-BenchmarkPrefetcherApps         # the same for app-call groups
+BenchmarkPrefetcherPayment      # account prefetch fan-out ahead of eval; v3.17.0 to v4.5.1 need patches/fix-prefetcher-benchmark-typed-nil.sh
+BenchmarkPrefetcherApps         # the same for app-call groups; same patch
 BenchmarkMakeStateDelta         # per-block delta allocation, 20 MB/op
 BenchmarkOnlineAccountsCacheRead320     # agreement-round online lookups
 BenchmarkBlockEvaluatorRAMNoCrypto      # 50k-txn block through Eval, ~6s setup, ~0.5s/op; patches/fix-setup-heavy-benchmarks.sh pins b.N to 2 so the setup runs once and the timed iteration is warm

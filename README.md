@@ -25,9 +25,11 @@ checkout they own, and the source edits a stable benchmark run needs are applied
   a copy and a PR away from go-algorand.
 - `patches/` - edits applied to the checkout before benchmarking: the noise sentinel, the
   ed25519 verifier pin, repairs for three upstream benchmarks that fail at master, a rewrite of
-  one that could not run, a fix for two whose setup and numbers followed b.N, and the removal of
+  one that could not run, a fix for two whose setup and numbers followed b.N, the removal of
   one that measured nothing (each also a commit on the
-  `bench/fix-broken-benchmarks` branch of the go-algorand clone, for upstream PRs).
+  `bench/fix-broken-benchmarks` branch of the go-algorand clone, for upstream PRs), and a
+  nil check for the two prefetcher benchmarks at the tags from v3.17.0 to v4.5.1, where a
+  typed-nil error fails them and master has already fixed the type.
 - `site/` - a static trend viewer published to GitHub Pages.
 - `ROADMAP.md` - the survey of every benchmark upstream: what is tracked, what was left out
   and why, what is broken at master, and what is worth writing next.

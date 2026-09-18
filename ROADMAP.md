@@ -146,7 +146,10 @@ on the branch only, since nothing here would trend it.
 
 The exclusions this repo recorded for `BenchmarkBlockEvaluatorRAM*` and `BenchmarkPrefetcherPayment`
 were partly stale: the `NoCrypto` variants call `Eval` with validation off so the proposer check
-never runs, and the prefetcher benchmarks never build a block. Both are tracked now.
+never runs, and the prefetcher benchmarks never build a block. Both are tracked now. The
+prefetcher pair does fail at the tags from v3.17.0 to v4.5.1, where the group's `Err` is a
+`*GroupTaskError` and `require.NoError` sees a nil pointer as a non-nil error;
+`patches/fix-prefetcher-benchmark-typed-nil.sh` swaps in a nil check there.
 
 ## 3. New benchmarks to write upstream
 
