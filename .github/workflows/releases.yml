@@ -1,22 +1,22 @@
 name: releases
 
 # Benchmarks any go-algorand *-stable tag that has no release session yet, and
-# commits the sessions to this repo. The nightly job tracks master; this one is
+# commits the sessions to this repo. The master workflow tracks master; this one is
 # what puts the release points on the trend site. It runs every hour, and a
 # cheap first job compares upstream's tags with the store; most hours there is
 # nothing new and the run ends there. run-sweep.sh does the skipping too
 # (SKIP_IF_DONE), so a dispatch with nothing to do costs a checkout.
 #
-# MAX_TAGS is 1: one tag per run, oldest first. With the 45-name set a tag is
+# MAX_TAGS is 1: one tag per run, oldest first. With the 67-name set a tag is
 # three sessions of ten minutes or more each, and the results are committed
 # only when the run ends, so a run that hits the job time limit loses every
 # tag it measured. A backlog clears one tag an hour.
 
 on:
   schedule:
-    # Every hour, at 35 past, half an hour off the master check. Upstream
+    # Every hour, at 47 past, half an hour off the master check. Upstream
     # publishes releases around 14:30 UTC, so a tag is measured the same day.
-    - cron: '35 * * * *'
+    - cron: '47 * * * *'
   workflow_dispatch:
     inputs:
       tags:
@@ -34,7 +34,7 @@ on:
         default: false
 
 concurrency:
-  # Shared with nightly: never two benchmark runs on one machine at the same time.
+  # Shared with master: never two benchmark runs on one machine at the same time.
   group: benchmark-runner
   cancel-in-progress: false
 
@@ -64,7 +64,8 @@ jobs:
           upstream="$(git ls-remote --tags https://github.com/algorand/go-algorand.git 'refs/tags/*-stable' \
             | cut -f2 | sed 's|^refs/tags/||; s|\^{}$||' | sort -u)"
           [ -n "$upstream" ] || { echo "could not read tags from upstream" >&2; exit 1; }
-          done="$(cat .benchspotter/sessions/*/meta.json \
+          # cat fails when the store is empty, which is a backlog of every tag, not an error.
+          done="$({ cat .benchspotter/sessions/*/meta.json 2>/dev/null || true; } \
             | jq -r -s '[.[] | select(.tags | index("release")) | .name] | unique[]' | sort)"
           oldest="$(echo "$done" | sort -V | head -1)"
           # A tag is due if it has no session and is not older than the oldest measured tag.

@@ -30,7 +30,7 @@ bs_preflight() {
 }
 
 # bs_clone - make sure $CHECKOUT is a go-algorand clone with current refs.
-# Kept between runs; the build cache and the clone are what make a nightly
+# Kept between runs; the build cache and the clone are what make a master
 # run take minutes instead of an hour.
 bs_clone() {
   if [ ! -d "$CHECKOUT/.git" ]; then
@@ -70,8 +70,8 @@ bs_prepare() {
     export GOTOOLCHAIN="$BS_DIRECTIVE"
   else
     # NOTE: GOTOOLCHAIN=auto only ever steps UP. With a local Go newer than the
-    # go.mod directive every ref builds with the local Go, which is fine for a
-    # nightly series and wrong for a historical sweep.
+    # go.mod directive every ref builds with the local Go, which is fine for the
+    # master series and wrong for a historical sweep.
     unset GOTOOLCHAIN
   fi
 

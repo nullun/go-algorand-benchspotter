@@ -70,8 +70,8 @@ else
 fi
 
 # A sweep is ~22 minutes a tag, so re-measuring a tag that already has a release
-# session is the expensive mistake here, not skipping one. The nightly job makes
-# the same check against its own commit; see SKIP_IF_DONE in run-nightly.sh.
+# session is the expensive mistake here, not skipping one. The master workflow makes
+# the same check against its own commit; see SKIP_IF_DONE in run-ref.sh.
 if [ "$SKIP_IF_DONE" = 1 ] && [ ${#TAGS[@]} -gt 0 ]; then
   DONE="$(benchspotter session ls -f json 2>/dev/null \
     | jq -r '[.[] | select(.tags | index("release")) | .name] | unique[]?')"

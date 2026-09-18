@@ -13,11 +13,11 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 
 - `.benchspotter/` - the benchspotter store, and the point of the repo. `benchspotter trend`,
   `session ls` and `compare` work from a checkout of this repo with no flags.
-- `run-nightly.sh` - one set of sessions against a single ref, by default `origin/master`.
+- `run-ref.sh` - one set of sessions against a single ref, by default `origin/master`.
 - `run-sweep.sh` - the historical sweep over the stable tags that carry a go.mod toolchain
   directive, each built with the toolchain it names.
 - `lib/benches.txt` - the benchmark set, 67 names with a note on what each measures.
-- `lib/check-steps.py` - compares the newest point with the ones before it; the nightly runs it.
+- `lib/check-steps.py` - compares the newest point with the ones before it; the master workflow runs it.
 - `benchmarks/` - benchmarks this repo carries that go-algorand does not have yet, one
   `benchspotter_<topic>_test.go` per topic under the package path it belongs to. They are copied
   into the checkout before each run, compile-gated per package so an old tag that lacks the code
@@ -37,41 +37,41 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 Needs `benchspotter`, `jq`, `git`, `make`, a C toolchain (libsodium) and any recent Go. The
 go.mod toolchain directive of the ref under test decides the Go that actually compiles it.
 
-    ./run-nightly.sh                      # origin/master
-    ./run-nightly.sh v5.0.1-stable        # any ref
+    ./run-ref.sh                          # origin/master
+    ./run-ref.sh v5.0.1-stable            # any ref
     ./run-sweep.sh                        # every stable tag, oldest first, ~15 min each
     ./run-sweep.sh v5.0.0-stable v5.0.1-stable
 
 Both take `RUNS`, `COUNT`, `BENCHTIME`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT`, `REMOTE` and
-`SKIP_IF_DONE`, and the nightly also `KIND` and `PROFILES`; the header of each script lists them.
+`SKIP_IF_DONE`, and `run-ref.sh` also `KIND` and `PROFILES`; the header of each script lists them.
 The defaults are three runs of `-count 2` at `-benchtime 300ms`: six samples per series, three of
 them in separate processes, in about five minutes per run on an M2 Pro (the 111 leaf series each
 get their own `go test` process, so a run is mostly harness ramp and link time, and the 1s Go
 default doubled it for no gain in ns/op). `SKIP_IF_DONE=1` is the default and drops work that is already
-in the store: a commit with a `nightly` session, a tag with a `release` session. Pass
+in the store: a commit with a `master` session, a tag with a `release` session. Pass
 `SKIP_IF_DONE=0` to measure something a second time. Results go to `.benchspotter` unless
 `BENCHSPOTTER_PATH` says otherwise.
 
     benchspotter trend --tag run1         # one clean series per release
-    benchspotter trend --tag nightly
+    benchspotter trend --tag master
     benchspotter session ls
 
 ## The scheduled jobs
 
-`.github/workflows/nightly.yml` runs every hour. A first job on a hosted runner compares the sha
+`.github/workflows/master.yml` runs every hour. A first job on a hosted runner compares the sha
 `origin/master` points at with the store, using `git ls-remote` and `jq` and nothing else; most
 hours master has not moved and the run ends there in seconds. When it has, the benchmark job
 measures the new commit, commits the sessions and triggers the site rebuild, so master gets one
-point per merge rather than one per day. The sessions keep the `nightly` tag, which is the kind
+point per merge rather than one per day. The sessions carry the `master` tag, which is the kind
 the site and the step check know. After the run it compares
-the new point with the seven nightlies before it in commit order on the same runner
+the new point with the seven master points before it in commit order on the same runner
 (`lib/check-steps.py`),
 writes the result to the job summary and opens an issue when a series stepped by more than 5%
 and more than twice its run-to-run spread. A dispatch can add cpu or mem profiles to the run
 with the `profiles` input; they are megabytes per session, so only for a run to drill into.
 
 `.github/workflows/range.yml` is for the morning after a step: given the last good and the
-first bad nightly commit, it benchmarks every first-parent commit between them, tagged `range`,
+first bad master commit, it benchmarks every first-parent commit between them, tagged `range`,
 so the step can be pinned to one merge. It refuses ranges over `max_commits` (20).
 
 `.github/workflows/releases.yml` runs every hour too, half an hour offset, and does the same for
@@ -128,7 +128,10 @@ push made with `GITHUB_TOKEN` does not trigger other workflows.
 
 ## The M2 Pro archive
 
-`main` carries only what GitHub Actions measured, starting 2026-09-16. The sweep that started
+`main` carries only what GitHub Actions measured with the current 67-name set, from 2026-09-18
+on. The first hosted sweep (2026-09-16, six names, `-count 4` at the 1s benchtime, spread over
+three different CPU models) was removed on 2026-09-18 so that every tag is measured again with
+the full set; it is still in the history before that commit. The sweep that started
 this repo - 20 `vX.Y.Z-stable` tags (v3.24.0 to v5.0.1, 2024-05 to 2026-08) x 3 runs,
 `-count=4`, one Apple M2 Pro, 2026-09-14 - is frozen on the `archive/macbook-sweep` branch.
 
@@ -164,15 +167,16 @@ Known artefacts, all worth checking before believing a jump:
   pins it to the Go implementation, which is what algod has defaulted to since v4.4.1. The v3 and
   v4 sessions in the M2 Pro archive predate the patch and are mostly libsodium numbers, so they
   are not comparable to production and not comparable to each other tag by tag.
-- The set grew from 6 names to 45 on 2026-09-17 and to 72 the same day, so most series start
-  there. On 2026-09-18 five were dropped (three redundant payment-block benchmarks and the
-  merkletrie Add and Delete, whose ns/op follows the benchtime; `lib/benches.txt` says which) and
-  `-benchtime` went from the 1s Go default to 300ms. Sessions carry a `benchtime:` tag, the site
-  draws a rule where it changes, and `lib/check-steps.py` compares only within one value: the
-  series whose work scales with b.N moved at that rule and nothing else should have. Names that do
-  not exist at a tag are skipped, and `BenchmarkPay` and `BenchmarkAppInt1` fail on the missing
-  proposer at tags before v5, so a release sweep of an old tag would abort; the old tags are
-  already measured.
+- The set grew from 6 names to 45 on 2026-09-17 and to 72 the same day. On 2026-09-18 five were
+  dropped (three redundant payment-block benchmarks and the merkletrie Add and Delete, whose
+  ns/op follows the benchtime; `lib/benches.txt` says which), `-benchtime` went from the 1s Go
+  default to 300ms, and the store was cleared so that every point on `main` is the same 67 names
+  at the same settings. Sessions carry a `benchtime:` tag, the site draws a rule where it changes,
+  and `lib/check-steps.py` compares only within one value, so a later change here is a series
+  break for the few benchmarks whose work scales with b.N and nothing else. Names that do not
+  exist at a tag are skipped. `BenchmarkAppInt1` builds its blocks without a proposer at the v3
+  tags, which payouts under `ConsensusFuture` reject; `patches/fix-block-benchmarks-proposer.sh`
+  finishes them there the way v4.0.1 and later already do.
 - `MerkleCommit` is not recorded from 2026-09-15 on. Its 3 x 5 x 5 grid of hash family x Item x
   Count produced 45 of the 52 series in the archive, they all moved together, and they were most
   of the run time of a session. The archive branch still has them and its site marks them as no

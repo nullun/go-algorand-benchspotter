@@ -8,12 +8,12 @@ This is benchspotter's default store for this repo, so `benchspotter trend`, `se
 - `sweep-logs/<timestamp>/` - logs from `run-sweep.sh`: `summary.tsv` (tag, commit date,
   toolchain, run, session id, seconds, status), the `run-sweep.sh` used, and per-tag build and
   bench logs.
-- `nightly-logs/<timestamp>/` - the same, from `run-nightly.sh`.
+- `ref-logs/<timestamp>/` - the same, from `run-ref.sh` (the master and range workflows).
 
 Session tags carry what benchspotter cannot record itself. Its `go_version` field is
 `runtime.Version()` of the benchspotter binary and is identical everywhere, so the toolchain that
-built the code under test is a tag (`go1.21.10`), alongside the kind (`release`, `nightly`, or
-`range` for a commit between two nightlies measured by the range workflow), `run1`..`runN`, the
+built the code under test is a tag (`go1.21.10`), alongside the kind (`release`, `master`, or
+`range` for a commit between two master points measured by the range workflow), `run1`..`runN`, the
 machine (`runner:...`), the commit time (`commit:2026-09-15T19:19:14Z`, UTC, what the site orders
 by), the consensus version at that commit (`consensus:v42`) and `partial` for a session where one package failed.
 

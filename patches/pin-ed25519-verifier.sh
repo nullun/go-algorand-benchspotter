@@ -7,7 +7,7 @@
 #
 # true selects pure-Go ed25519consensus, false the libsodium cgo path. The two
 # are about 26us and 41us per BenchmarkTxn op (6 vs 8 allocs), so an unpatched
-# nightly run reports a 60% regression and recovery on alternate days at random.
+# master run reports a 60% regression and recovery on alternate days at random.
 #
 # Pin it. algod itself has defaulted to the Go implementation since v4.4.1
 # (EnableBatchVerification), so true is what production runs; set

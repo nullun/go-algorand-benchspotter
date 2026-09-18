@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# run-nightly.sh - one benchmark session set against a single go-algorand ref,
+# run-ref.sh - one benchmark session set against a single go-algorand ref,
 # by default whatever origin/master points at right now.
 #
 # Usage:
-#   ./run-nightly.sh              # origin/master
-#   ./run-nightly.sh <ref>        # any branch, tag or commit
+#   ./run-ref.sh              # origin/master
+#   ./run-ref.sh <ref>        # any branch, tag or commit
 #
 # Environment overrides:
 #   CHECKOUT      go-algorand clone to use (default ./checkout/go-algorand, created on demand)
@@ -17,8 +17,8 @@
 #   TOOLCHAIN     "pinned" (default) uses the go.mod toolchain directive, "auto" the local Go
 #   BENCHES       space-separated benchmark regexps (default: the set in lib/benches.txt)
 #   RUNNER        label recorded as a session tag (default: runner:$(hostname -s))
-#   KIND          session kind tag (default nightly). The range workflow passes "range" so
-#                 its per-commit points can be told apart from the nightly series.
+#   KIND          session kind tag (default master). The range workflow passes "range" so
+#                 its per-commit points can be told apart from the master series.
 #   PROFILES      extra benchspotter profiles to record alongside bench, space-separated
 #                 (cpu mem block mutex). Off by default: a profile is megabytes per session.
 #   SKIP_IF_DONE  1 (default) exits 0 without benchmarking if this commit already has a
@@ -35,7 +35,7 @@ REF="${1:-origin/master}"
 RUNS="${RUNS:-3}"
 COUNT="${COUNT:-2}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
-KIND="${KIND:-nightly}"
+KIND="${KIND:-master}"
 PROFILES="${PROFILES:-}"
 SKIP_IF_DONE="${SKIP_IF_DONE:-1}"
 # One name per line, trailing "# ..." comments dropped.
@@ -44,7 +44,7 @@ BENCHES="${BENCHES:-$(sed 's/#.*//' lib/benches.txt | awk 'NF {print $1}' | tr '
 bs_preflight || exit 1
 bs_clone || { echo "clone/fetch failed" >&2; exit 1; }
 
-LOGDIR="${LOGDIR:-$BENCHSPOTTER_PATH/nightly-logs/$(date +%Y%m%d-%H%M%S)}"
+LOGDIR="${LOGDIR:-$BENCHSPOTTER_PATH/ref-logs/$(date +%Y%m%d-%H%M%S)}"
 mkdir -p "$LOGDIR"
 
 FULLCOMMIT="$(git -C "$CHECKOUT" rev-parse "$REF")" || exit 1
@@ -90,7 +90,7 @@ for run in $(seq 1 "$RUNS"); do
       rc_all=1
       continue
     fi
-    partial="; PARTIAL, a package failed, see nightly log"
+    partial="; PARTIAL, a package failed, see ref log"
     benchspotter session tag "$id" partial
     rc_all=1
   fi

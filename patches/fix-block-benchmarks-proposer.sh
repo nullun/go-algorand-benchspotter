@@ -10,6 +10,12 @@
 # Finish each block with a placeholder proposer, as ledger/ledger_perf_test.go
 # already does. An unfunded proposer is ineligible, so the payout stays zero.
 #
+# ledger/ledger_perf_test.go itself (BenchmarkAppInt1 and the other full-block
+# benchmarks) only finishes its blocks from v4.0.1 on. The v3 tags run them
+# under ConsensusFuture, where payouts were already enabled, and add the
+# unfinished block, so the same fix is applied there too; at later tags the
+# file already has it and is left alone.
+#
 # fullblock_perf_test.go also prints progress with fmt.Printf. When Go runs a
 # second round of iterations that lands inside the result line and benchspotter
 # drops the result. go test merges the binary's stderr into stdout, so the
@@ -24,6 +30,7 @@ cd "$CHECKOUT"
 
 EVAL=ledger/evalbench_test.go
 FULL=ledger/fullblock_perf_test.go
+PERF=ledger/ledger_perf_test.go
 COMMITTEE='"github.com/algorand/go-algorand/data/committee"'
 
 if [ ! -f "$EVAL" ] || [ ! -f "$FULL" ]; then
@@ -54,4 +61,15 @@ if grep -qF $'\tfmt.Printf(' "$FULL"; then
   echo "progress output of $FULL sent through b.Logf"
 fi
 
-gofmt -l "$EVAL" "$FULL" | grep . && { echo "gofmt disagrees with the patch" >&2; exit 1; } || true
+if [ -f "$PERF" ] && grep -qF 'l0.AddBlock(lvb.UnfinishedBlock(), cert)' "$PERF"; then
+  # Finish the block once after GenerateBlock, then use it at the three sites
+  # that took the unfinished block (the two AddBlock calls and the replay list).
+  perl -0pi -e 's{^(\t+)lvb, err := eval\.GenerateBlock\(nil\)\n\1require\.NoError\(b, err\)\n}{$1lvb, err := eval.GenerateBlock(nil)\n$1require.NoError(b, err)\n\n$1fb := lvb.FinishBlock(committee.Seed{0x01}, basics.Address{0x01}, false) // patched by benchspotter\n}m' "$PERF"
+  perl -pi -e 's{lvb\.UnfinishedBlock\(\)}{fb}g' "$PERF"
+  grep -qF "$COMMITTEE" "$PERF" || perl -0pi -e 's{(\t"github.com/algorand/go-algorand/data/bookkeeping"\n)}{$1\t"github.com/algorand/go-algorand/data/committee"\n}' "$PERF"
+  echo "patched $PERF"
+else
+  echo "skip: $PERF already finishes its blocks or differs"
+fi
+
+gofmt -l "$EVAL" "$FULL" "$PERF" | grep . && { echo "gofmt disagrees with the patch" >&2; exit 1; } || true

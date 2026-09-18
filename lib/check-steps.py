@@ -7,9 +7,9 @@
 A point is every session of one commit on one runner (the RUNS repeats), as on
 the site. Points are in commit order. The point checked is the one measured
 most recently, and it is compared with the --history points before it in
-history of the same kind (nightly against nightlies, release against releases)
+history of the same kind (master against master points, release against releases)
 on the same runner, so an old tag measured late is judged against its
-neighbours, not against the newest nightlies. Only points measured with the
+neighbours, not against the newest master points. Only points measured with the
 same -benchtime count as baseline (tag benchtime:<value>, lib/common.sh), since
 a change there moves the series whose work scales with b.N. A step counts when it is
 larger than --min-pct and larger than --spread-factor times the widest spread
@@ -43,7 +43,7 @@ def runner_of(session):
     return next((t for t in session["tags"] if t.startswith("runner:")), "runner:?")
 
 
-KINDS = ("nightly", "release", "range")
+KINDS = ("master", "release", "range")
 
 
 def kind_of(session):
@@ -96,6 +96,8 @@ def point_value(point, name, unit):
 
 def check(store, runner, kind, history, min_pct, spread_factor, unit):
     sessions = build.load_sessions(store)
+    if not sessions:
+        return runner or "runner:?", None, []
     if runner is None:
         runner = runner_of(sessions[-1])
     if kind is None:
@@ -173,7 +175,7 @@ def main():
     ap.add_argument("--store", type=Path, default=here.parent / ".benchspotter")
     ap.add_argument("--runner", help="runner:<label> tag; default: the newest session's")
     ap.add_argument("--kind", choices=KINDS,
-                    help="compare within nightly, release or range points; default: the newest session's")
+                    help="compare within master, release or range points; default: the newest session's")
     ap.add_argument("--history", type=int, default=7, help="baseline points (default 7)")
     ap.add_argument("--min-pct", type=float, default=5.0, help="smallest step reported")
     ap.add_argument("--spread-factor", type=float, default=2.0,

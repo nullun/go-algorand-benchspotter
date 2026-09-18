@@ -1,9 +1,10 @@
 name: range
 
 # Benchmarks every first-parent commit between two refs, one session set each,
-# and commits the sessions tagged "range". The nightly gives one point a day
-# and master often merges several PRs in a day; when a nightly steps, this is
-# what says which commit did it. Run it with the two nightly commits either
+# and commits the sessions tagged "range". The master workflow measures the
+# commit master points at when its hourly check runs, and master often merges
+# several PRs between two checks; when a master point steps, this is what says
+# which commit did it. Run it with the two master commits either
 # side of the step. The site shows range points as their own kind, and the
 # step check compares them only with each other.
 
@@ -11,10 +12,10 @@ on:
   workflow_dispatch:
     inputs:
       from:
-        description: older ref (exclusive), usually the last good nightly commit
+        description: older ref (exclusive), usually the last good master commit
         required: true
       to:
-        description: newer ref (inclusive), usually the first bad nightly commit
+        description: newer ref (inclusive), usually the first bad master commit
         required: true
       runs:
         description: sessions to record per commit
@@ -69,7 +70,7 @@ jobs:
           fi
           rc=0
           for c in $COMMITS; do
-            ./run-nightly.sh "$c" || rc=1
+            ./run-ref.sh "$c" || rc=1
           done
           exit $rc
 

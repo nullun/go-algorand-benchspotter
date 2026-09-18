@@ -67,6 +67,10 @@ def parse_bench(path):
 
 def load_sessions(store):
     sessions = []
+    # No sessions directory at all is an empty store (git does not keep empty
+    # directories), which happens right after the store is cleared.
+    if not (store / "sessions").is_dir():
+        return sessions
     for d in sorted((store / "sessions").iterdir()):
         meta_path, bench_path = d / "meta.json", d / "results.bench"
         if not meta_path.exists() or not bench_path.exists():
@@ -116,7 +120,7 @@ def build(store, out):
     sessions = load_sessions(store)
     notes = load_notes(Path(__file__).resolve().parent.parent / "lib" / "benches.txt")
     if not sessions:
-        sys.exit(f"no sessions found under {store}")
+        print(f"no sessions under {store}; building an empty page", file=sys.stderr)
 
     names = sorted({name for s in sessions for name in s["results"]})
     units = {}

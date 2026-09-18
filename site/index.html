@@ -132,11 +132,11 @@ const benchtimeOf = s => (s.tags.find(t => t.startsWith("benchtime:")) || "bench
 const SENTINEL = "BenchmarkNoiseSentinelHash";
 const UPSTREAM = "https://github.com/algorand/go-algorand";
 
-// A session is a release, a nightly or a range point (a commit between two
-// nightlies, from the range workflow); the toggles pick which kinds to plot.
+// A session is a release, a master or a range point (a commit between two
+// master points, from the range workflow); the toggles pick which kinds to plot.
 // The runner select only appears once more than one machine has contributed,
 // since points from different hardware never belong on one line.
-const KINDS = { release: "releases", nightly: "nightlies", range: "range points" };
+const KINDS = { release: "releases", master: "master commits", range: "range points" };
 const kindOf = s => s.tags.find(t => t in KINDS);
 // Ordered by when the commit was made (a tag measured late still lands where
 // it belongs in history) or by when the session was recorded, which is the
@@ -346,6 +346,9 @@ fetch("data.json").then(r => r.json()).then(data => {
     `${data.sessions.length} sessions, ${Object.keys(data.series).length} benchmarks, ` +
     `built ${data.generated.slice(0, 16).replace("T", " ")} UTC. ` +
     `Hover a point for the commit and the machine that ran it.`;
+  // An empty store (just cleared, or the first run not yet committed) is a
+  // page with the summary line and nothing to draw.
+  if (!data.sessions.length) return;
 
   // One toggle per kind of session present; pointless until there are two kinds.
   const kinds = [...new Set(data.sessions.map(kindOf).filter(Boolean))].sort();

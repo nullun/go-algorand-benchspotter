@@ -20,14 +20,15 @@ Checked items are done. The order within a section is priority.
   Go version is already a session tag, so the site can draw a rule at each change.
 - [x] **Compare links.** The tooltip links to the GitHub compare view between the previous
   point's commit and this one, which is the list of PRs that could have caused a step.
-- [x] **Range dispatch.** Master often merges several PRs a day and the nightly is one point. A
+- [x] **Range dispatch.** Master often merges several PRs between two hourly checks and each
+  master point is one commit. A
   workflow that takes two refs and benchmarks every first-parent commit between them fills the
   gap when a step appears. Sessions are tagged `range` so the site can toggle them.
 - [x] **Profiles on demand.** A dispatch input that adds a cpu or mem profile to a single
-  nightly run. Profiles are too large to record every night.
+  master run. Profiles are too large to record every time.
 - [x] **Wider set, one package at a time.** benchspotter aborts a session when any package's
   `go test` fails, so a new package should be smoke-run at `-count 1` on a dispatch before it
-  joins the nightly set.
+  joins the master set.
 - [x] **Noise yardstick.** The band and the step check take the spread of every repeat of every
   run, since inside-process spread is two to four times the between-process spread on the hosted
   runner. Three runs of count four stay: the runs guard against a noisy neighbour mid-session,
