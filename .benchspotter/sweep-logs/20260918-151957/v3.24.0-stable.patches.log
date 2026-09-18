@@ -1,0 +1,44 @@
+--- add-benchmarks.sh
+skip network/vpack/benchspotter_vote_test.go: package network/vpack does not exist at this ref
+copied 19 benchmark files into 11 packages
+--- add-noise-sentinel.sh
+wrote /home/runner/.cache/go-algorand-bench/checkout/benchsentinel/sentinel_test.go
+--- fix-block-benchmarks-proposer.sh
+patched ledger/evalbench_test.go
+patched ledger/fullblock_perf_test.go
+progress output of ledger/fullblock_perf_test.go sent through b.Logf
+patched ledger/ledger_perf_test.go
+--- fix-prefetcher-benchmark-typed-nil.sh
+patched ledger/eval/prefetcher/prefetcher_test.go
+--- fix-setup-heavy-benchmarks.sh
+patched ledger/evalbench_test.go
+patched data/transactions/verify/txn_test.go
+--- fix-txhandler-benchmark-rate-limiter.sh
+patched 2 harness(es) in /home/runner/.cache/go-algorand-bench/checkout/data/txHandler_test.go
+--- fix-vote-verifier-benchmark.sh
+288:	c := verifier.VerifiedVotes() // patched by benchspotter
+290:	round := ledger.NextRound()
+--- pin-ed25519-verifier.sh
+skip: coin toss not present at this ref
+--- remove-codec-encoder-benchmark.sh
+removed /home/runner/.cache/go-algorand-bench/checkout/protocol/encodebench_test.go
+--- rewrite-txpool-recompute-benchmark.sh
+replaced BenchmarkTransactionPoolRecompute; new file /home/runner/.cache/go-algorand-bench/checkout/data/pools/transactionPool_bench_test.go
+--- zz-compile-gate.sh
+data/bookkeeping does not compile at this ref:
+    data/bookkeeping/benchspotter_codec_test.go:121:23: undefined: crypto.Sha512Digest
+    data/bookkeeping/benchspotter_codec_test.go:128:3: unknown field Branch512 in struct literal of type BlockHeader
+    data/bookkeeping/benchspotter_codec_test.go:133:4: unknown field Sha512Commitment in struct literal of type TxnCommitments
+  dropped the added files in data/bookkeeping; the edits to upstream files stand
+data/pools does not compile at this ref:
+    data/pools/transactionPool_bench_test.go:45:24: undefined: generateAccounts
+    data/pools/transactionPool_bench_test.go:68:27: pool.rememberOne undefined (type *TransactionPool has no field or method rememberOne, but does have RememberOne)
+  dropped the added files in data/pools; the edits to upstream files stand
+data/transactions/logic does not compile at this ref:
+    data/transactions/logic/benchspotter_stateful_test.go:94:30: cannot use 1 (untyped int constant) as basics.TealValue value in argument to ledger.NewGlobal
+    data/transactions/logic/benchspotter_stateful_test.go:96:40: cannot use 1 (untyped int constant) as basics.TealValue value in argument to ledger.NewLocal
+  dropped the added files in data/transactions/logic; the edits to upstream files stand
+ledger/apply does not compile at this ref:
+    ledger/apply/benchspotter_apply_test.go:163:9: undefined: makeTestEp
+  dropped the added files in ledger/apply; the edits to upstream files stand
+compile gate: 12 packages kept, 4 trimmed to upstream edits, 0 restored
