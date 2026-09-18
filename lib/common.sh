@@ -10,6 +10,9 @@ export BENCHSPOTTER_PATH="${BENCHSPOTTER_PATH:-$REPO_ROOT/.benchspotter}"
 CHECKOUT="${CHECKOUT:-$REPO_ROOT/checkout/go-algorand}"
 REMOTE="${REMOTE:-https://github.com/algorand/go-algorand.git}"
 TOOLCHAIN="${TOOLCHAIN:-pinned}"
+# PATH before any per-tag Go was put in front of it; bs_prepare restores it
+# each time so one tag's Go 1.20 does not leak into the next tag.
+BS_ORIG_PATH="$PATH"
 # -benchtime for every benchmark. go test reads GOFLAGS, so benchspotter needs
 # no flag for it. The Go default of 1s costs 2-4 s of ramp per -count repeat of
 # every series and buys nothing for a ns-to-ms benchmark; 300ms gave the same
@@ -65,14 +68,29 @@ bs_prepare() {
   BS_COMMIT_TIME="$(bs_commit_time HEAD)"
   BS_CONSENSUS="$(bs_consensus_version HEAD)"
 
+  # Which Go builds this ref. From v3.24.0 go.mod names it in a toolchain
+  # directive. Before that the version upstream released with is BUILD= in
+  # scripts/get_golang_version.sh (1.20.5 at v3.17.0, 1.20.14 at v3.23.1).
+  # GOTOOLCHAIN can switch to any go1.21 or later by downloading it, but the
+  # toolchain module has nothing older, so a Go 1.20 is installed through
+  # golang.org/dl into ~/sdk and put in front of PATH for this ref only.
+  PATH="$BS_ORIG_PATH"
+  unset GOTOOLCHAIN
   BS_DIRECTIVE="$(awk '/^toolchain /{print $2}' "$CHECKOUT/go.mod")"
-  if [ "$TOOLCHAIN" = pinned ] && [ -n "$BS_DIRECTIVE" ]; then
-    export GOTOOLCHAIN="$BS_DIRECTIVE"
-  else
+  local want=""
+  if [ "$TOOLCHAIN" = pinned ]; then
+    want="${BS_DIRECTIVE:-$(bs_build_go_version)}"
+  fi
+  if [ -z "$want" ]; then
     # NOTE: GOTOOLCHAIN=auto only ever steps UP. With a local Go newer than the
     # go.mod directive every ref builds with the local Go, which is fine for the
     # master series and wrong for a historical sweep.
-    unset GOTOOLCHAIN
+    :
+  elif bs_version_ge "$want" go1.21.0; then
+    export GOTOOLCHAIN="$want"
+  else
+    bs_install_go "$want" "$logdir/$prefix.goinstall.log" || return 1
+    PATH="$HOME/sdk/$want/bin:$PATH"
   fi
 
   BS_GOVERSION="$(cd "$CHECKOUT" && go version 2>"$logdir/$prefix.goversion.log" | awk '{print $3}')"
@@ -90,6 +108,33 @@ bs_prepare() {
   # After the toolchain and libsodium: patches/zz-compile-gate.sh compiles
   # every package the patches touched, and that needs both.
   bs_apply_patches "$logdir/$prefix.patches.log" || return 1
+}
+
+# bs_build_go_version - the Go upstream built this ref with, as "go1.20.14",
+# from scripts/get_golang_version.sh; empty when the script or BUILD= is absent.
+bs_build_go_version() {
+  local v
+  v="$(sed -n 's/^[[:space:]]*BUILD=\([0-9][0-9.]*\).*/\1/p' "$CHECKOUT/scripts/get_golang_version.sh" 2>/dev/null | head -1)"
+  [ -n "$v" ] && echo "go$v"
+}
+
+# bs_version_ge <a> <b> - true when Go version a is b or newer (go1.20.14 style).
+bs_version_ge() {
+  [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$2" ]
+}
+
+# bs_install_go <version> <log> - make sure ~/sdk/<version>/bin/go exists, using
+# the golang.org/dl wrappers (go install golang.org/dl/go1.20.14@latest, then
+# go1.20.14 download). A no-op once it is there, so a runner that keeps ~/sdk
+# pays for it once. GOFLAGS is cleared: the -benchtime in it is for go test.
+bs_install_go() {
+  local v="$1" log="$2" sdk="$HOME/sdk/$1" gobin
+  [ -x "$sdk/bin/go" ] && return 0
+  echo "installing $v into $sdk via golang.org/dl"
+  gobin="$(GOFLAGS='' go env GOPATH)/bin"
+  GOFLAGS='' GOTOOLCHAIN=auto go install "golang.org/dl/$v@latest" >"$log" 2>&1 || { tail -3 "$log" >&2; return 1; }
+  GOFLAGS='' "$gobin/$v" download >>"$log" 2>&1 || { tail -3 "$log" >&2; return 1; }
+  [ -x "$sdk/bin/go" ]
 }
 
 # bs_apply_patches <log> - run every patches/*.sh against the checkout. They

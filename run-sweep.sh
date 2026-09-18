@@ -4,7 +4,7 @@
 # releases, each built with the Go toolchain named in its go.mod.
 #
 # Usage:
-#   ./run-sweep.sh                 # all stable tags that carry a toolchain directive, oldest-first
+#   ./run-sweep.sh                 # every stable tag from $FLOOR on, oldest first
 #   ./run-sweep.sh TAG [TAG...]    # only these tags (in the order given); used for smoke tests
 #
 # Environment overrides:
@@ -15,7 +15,12 @@
 #   RUNS          sessions recorded per tag, each a fresh process (default 3). Sessions share
 #                 the tag as name and are tagged run1..runN, so `trend --tag run1` gives one
 #                 clean series and `compare bench --session <id> ...` shows repeatability.
-#   TOOLCHAIN     "pinned" (default) sets GOTOOLCHAIN=<go.mod toolchain directive> per tag,
+#   FLOOR         oldest tag the default list includes (default v3.17.0-stable; releases.yml
+#                 uses the same value). Tags before it build with Go 1.17 and older and have
+#                 a third fewer of the tracked benchmarks; see the README.
+#   TOOLCHAIN     "pinned" (default) builds each tag with the Go it names: the go.mod toolchain
+#                 directive from v3.24.0, BUILD= in scripts/get_golang_version.sh before that
+#                 (Go 1.20, installed through golang.org/dl since GOTOOLCHAIN cannot fetch it).
 #                 "auto" leaves GOTOOLCHAIN untouched. NOTE: with a local Go newer than the
 #                 directive, "auto" builds every tag with the local Go: auto only ever steps
 #                 UP to a newer toolchain, never down. Only "pinned" gives per-release toolchains.
@@ -42,6 +47,7 @@ RUNS="${RUNS:-3}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
 SKIP_IF_DONE="${SKIP_IF_DONE:-1}"
 MAX_TAGS="${MAX_TAGS:-0}"
+FLOOR="${FLOOR:-v3.17.0-stable}"
 # One name per line, trailing "# ..." comments dropped.
 BENCHES="${BENCHES:-$(sed 's/#.*//' lib/benches.txt | awk 'NF {print $1}' | tr '\n' ' ')}"
 
@@ -63,7 +69,8 @@ else
   # Oldest first. The site orders points by commit time (a session tag), so
   # this is only for benchspotter's own trend view, which orders by record time.
   while IFS= read -r t; do
-    if git -C "$CHECKOUT" show "$t:go.mod" 2>/dev/null | grep -q '^toolchain '; then
+    # Tags older than FLOOR are left out; sort -V puts FLOOR first when t is newer or equal.
+    if [ "$(printf '%s\n%s\n' "$FLOOR" "$t" | sort -V | head -1)" = "$FLOOR" ]; then
       TAGS+=("$t")
     fi
   done < <(git -C "$CHECKOUT" for-each-ref --sort=creatordate --format='%(refname:short)' refs/tags | grep -- '-stable$')
@@ -127,6 +134,7 @@ echo "logs:      $LOGDIR"
 echo "count:     $COUNT"
 echo "runs:      $RUNS"
 echo "toolchain: $TOOLCHAIN"
+echo "floor:     $FLOOR"
 echo "tags (${#TAGS[@]}): ${TAGS[*]}"
 echo
 

@@ -9,10 +9,12 @@
     color-scheme: light dark;
     --bg: #fbfbfa; --fg: #1a1a1a; --muted: #6a6a6a; --line: #d8d8d4;
     --panel: #ffffff; --accent: #2f6f4f; --warn: #a33;
+    --go: #6f4fbf; --consensus: #b8731a;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #16171a; --fg: #e8e8e6; --muted: #9a9a96; --line: #32343a;
-            --panel: #1d1f23; --accent: #69b58c; --warn: #e07a7a; }
+            --panel: #1d1f23; --accent: #69b58c; --warn: #e07a7a;
+            --go: #a98ae6; --consensus: #e0a352; }
   }
   * { box-sizing: border-box; }
   body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--fg);
@@ -37,8 +39,12 @@
   .dot { fill: var(--accent); }
   .dot.hit { fill: transparent; }
   .band { fill: var(--accent); opacity: .16; stroke: none; }
+  /* One colour per kind of rule: Go toolchain, consensus version, benchtime. */
   .rule { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
   .rulelabel { fill: var(--muted); font-size: 10px; }
+  .rule.go { stroke: var(--go); } .rulelabel.go { fill: var(--go); }
+  .rule.consensus { stroke: var(--consensus); stroke-dasharray: 6 3; } .rulelabel.consensus { fill: var(--consensus); }
+  .legend .go { color: var(--go); } .legend .consensus { color: var(--consensus); }
   .sentinel { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
   .dot.hit { cursor: pointer; }
   .tip { position: fixed; pointer-events: none; background: var(--panel); color: var(--fg);
@@ -102,6 +108,9 @@
     <p class="meta" id="desc"></p>
     <div id="chart"></div>
     <p class="meta" id="chartmeta"></p>
+    <p class="meta legend">Dashed rules mark a change in the <span class="go">Go toolchain</span>
+      that built the code, the <span class="consensus">consensus version</span>, or the benchtime
+      (grey). Every series tends to step at a toolchain change; the ledger ones at a consensus change.</p>
   </div>
 </div>
 <div class="tip" id="tip"></div>
@@ -246,15 +255,17 @@ function draw() {
   // tends to step there at once, and that is the compiler) and where the
   // consensus version changed (new rules land in the ledger benchmarks), and
   // where -benchtime changed (the series whose work scales with b.N move).
-  const rules = [[goOf, T + 10], [consensusOf, H - B - 6], [benchtimeOf, T + 22]];
-  for (const [of, y] of rules) {
+  // Each kind has its own colour (CSS .rule.<kind>) so the three read apart.
+  const rules = [[goOf, T + 10, "go", ""], [consensusOf, H - B - 6, "consensus", "consensus "],
+                 [benchtimeOf, T + 22, "benchtime", "benchtime "]];
+  for (const [of, y, kind, prefix] of rules) {
     points.forEach((p, k) => {
       if (!k) return;
       const cur = of(DATA.sessions[p.g.idx[0]]), prev = of(DATA.sessions[points[k - 1].g.idx[0]]);
       if (!cur || !prev || cur === prev) return;
       const x = px(k).toFixed(1);
-      parts.push(`<line class="rule" x1="${x}" y1="${T}" x2="${x}" y2="${H - B}"/>`);
-      parts.push(`<text class="rulelabel" x="${x}" y="${y}" dx="3">${of === goOf ? cur : of === consensusOf ? "consensus " + cur : "benchtime " + cur}</text>`);
+      parts.push(`<line class="rule ${kind}" x1="${x}" y1="${T}" x2="${x}" y2="${H - B}"/>`);
+      parts.push(`<text class="rulelabel ${kind}" x="${x}" y="${y}" dx="3">${prefix}${cur}</text>`);
     });
   }
   if (showSentinel) {

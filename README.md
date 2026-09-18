@@ -14,8 +14,8 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 - `.benchspotter/` - the benchspotter store, and the point of the repo. `benchspotter trend`,
   `session ls` and `compare` work from a checkout of this repo with no flags.
 - `run-ref.sh` - one set of sessions against a single ref, by default `origin/master`.
-- `run-sweep.sh` - the historical sweep over the stable tags that carry a go.mod toolchain
-  directive, each built with the toolchain it names.
+- `run-sweep.sh` - the historical sweep over the stable tags from `v3.17.0-stable` on (`FLOOR`),
+  each built with the Go upstream released it with.
 - `lib/benches.txt` - the benchmark set, 67 names with a note on what each measures.
 - `lib/check-steps.py` - compares the newest point with the ones before it; the master workflow runs it.
 - `benchmarks/` - benchmarks this repo carries that go-algorand does not have yet, one
@@ -34,8 +34,11 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 
 ## Running it
 
-Needs `benchspotter`, `jq`, `git`, `make`, a C toolchain (libsodium) and any recent Go. The
-go.mod toolchain directive of the ref under test decides the Go that actually compiles it.
+Needs `benchspotter`, `jq`, `git`, `make`, a C toolchain (libsodium) and any recent Go. The Go
+that actually compiles a ref is the one it names: the go.mod toolchain directive from v3.24.0,
+and before that `BUILD=` in its `scripts/get_golang_version.sh`. Those are Go 1.20.x, which
+`GOTOOLCHAIN` cannot download, so `lib/common.sh` installs them once into `~/sdk` through
+`golang.org/dl` and puts that Go first on `PATH` for the ref.
 
     ./run-ref.sh                          # origin/master
     ./run-ref.sh v5.0.1-stable            # any ref
@@ -75,8 +78,9 @@ first bad master commit, it benchmarks every first-parent commit between them, t
 so the step can be pinned to one merge. It refuses ranges over `max_commits` (20).
 
 `.github/workflows/releases.yml` runs every hour too, half an hour offset, and does the same for
-`*-stable` tags: a cheap first job lists upstream's tags and proceeds only if one newer than the
-oldest measured tag has no `release` session. It takes at most `MAX_TAGS` (1) tag per run: with
+`*-stable` tags: a cheap first job lists upstream's tags and proceeds only if one from
+`FLOOR` (`v3.17.0-stable`, August 2023) on has no `release` session. Tags before the floor build
+with Go 1.17 and older and have a third fewer of the tracked names, so the series starts there. It takes at most `MAX_TAGS` (1) tag per run: with
 the 67-name set a tag is three sessions of ten minutes or so each, a GitHub-hosted job is
 killed at 6 hours, and nothing is committed until the last tag finishes, so a backlog clears at
 one tag an hour rather than risking a long run that commits nothing.
@@ -116,7 +120,8 @@ the sessions that predate this), and the step check uses the same order.
 
 The chart draws a dashed rule where the Go toolchain that built the code changed, since every
 series tends to step there at once, and another where `ConsensusCurrentVersion` changed, which
-is when new rules land in the ledger benchmarks. Both come from session tags the scripts record
+is when new rules land in the ledger benchmarks. Each kind has its own colour (purple for the
+toolchain, amber for consensus, grey for a benchtime change) and a legend under the chart. Both come from session tags the scripts record
 (`go1.25.3`, `consensus:v42`); `lib/backfill-tags.sh` adds them to older sessions. Clicking a point opens the upstream compare view between
 it and the previous point, which is the list of PRs that could have moved it. The noise
 sentinel toggle overlays the sentinel's relative movement on the current series (see below).

@@ -38,10 +38,15 @@ concurrency:
   group: benchmark-runner
   cancel-in-progress: false
 
+# The oldest tag the sweep measures. run-sweep.sh has the same default; tags
+# before it build with Go 1.17 and older and have far fewer of the tracked
+# benchmarks (README, "The scheduled jobs").
+env:
+  FLOOR: v3.17.0-stable
+
 jobs:
-  # Is there a stable tag without a release session? Tags older than the oldest
-  # measured one are ignored: they predate the go.mod toolchain directive and
-  # run-sweep.sh would skip them anyway. A dispatch always proceeds.
+  # Is there a stable tag from FLOOR on without a release session? A dispatch
+  # always proceeds.
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -67,16 +72,15 @@ jobs:
           # cat fails when the store is empty, which is a backlog of every tag, not an error.
           done="$({ cat .benchspotter/sessions/*/meta.json 2>/dev/null || true; } \
             | jq -r -s '[.[] | select(.tags | index("release")) | .name] | unique[]' | sort)"
-          oldest="$(echo "$done" | sort -V | head -1)"
-          # A tag is due if it has no session and is not older than the oldest measured tag.
+          # A tag is due if it has no session and is not older than FLOOR.
           todo=""
           for t in $(comm -23 <(echo "$upstream") <(echo "$done")); do
-            if [ -z "$oldest" ] || [ "$(printf '%s\n%s\n' "$oldest" "$t" | sort -V | head -1)" = "$oldest" ]; then
+            if [ "$(printf '%s\n%s\n' "$FLOOR" "$t" | sort -V | head -1)" = "$FLOOR" ]; then
               todo="$todo $t"
             fi
           done
           if [ -z "$todo" ]; then
-            echo "every stable tag since $oldest has a release session"
+            echo "every stable tag from $FLOOR on has a release session"
             echo "needed=false" >> "$GITHUB_OUTPUT"
           else
             echo "unmeasured stable tags:"; echo "$todo"
