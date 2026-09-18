@@ -125,6 +125,8 @@ const median = xs => {
 const runnerOf = s => s.tags.find(t => t.startsWith("runner:")) || "runner:?";
 const goOf = s => s.tags.find(t => /^go\d/.test(t)) || "";
 const consensusOf = s => s.consensus || "";
+// -benchtime the session ran with; sessions from before the tag ran at Go's default.
+const benchtimeOf = s => (s.tags.find(t => t.startsWith("benchtime:")) || "benchtime:1s").slice(10);
 // The sentinel series come from a benchmark that does not depend on go-algorand
 // (patches/add-noise-sentinel.sh): when they move, the machine did.
 const SENTINEL = "BenchmarkNoiseSentinelHash";
@@ -242,8 +244,9 @@ function draw() {
 
   // A rule where the Go toolchain that built the code changed (every series
   // tends to step there at once, and that is the compiler) and where the
-  // consensus version changed (new rules land in the ledger benchmarks).
-  const rules = [[goOf, T + 10], [consensusOf, H - B - 6]];
+  // consensus version changed (new rules land in the ledger benchmarks), and
+  // where -benchtime changed (the series whose work scales with b.N move).
+  const rules = [[goOf, T + 10], [consensusOf, H - B - 6], [benchtimeOf, T + 22]];
   for (const [of, y] of rules) {
     points.forEach((p, k) => {
       if (!k) return;
@@ -251,7 +254,7 @@ function draw() {
       if (!cur || !prev || cur === prev) return;
       const x = px(k).toFixed(1);
       parts.push(`<line class="rule" x1="${x}" y1="${T}" x2="${x}" y2="${H - B}"/>`);
-      parts.push(`<text class="rulelabel" x="${x}" y="${y}" dx="3">${of === goOf ? cur : "consensus " + cur}</text>`);
+      parts.push(`<text class="rulelabel" x="${x}" y="${y}" dx="3">${of === goOf ? cur : of === consensusOf ? "consensus " + cur : "benchtime " + cur}</text>`);
     });
   }
   if (showSentinel) {

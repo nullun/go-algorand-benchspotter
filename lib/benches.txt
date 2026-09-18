@@ -10,7 +10,8 @@
 # a session's run time), and nothing that opens sockets or sleeps. ROADMAP.md
 # lists what was considered and left out, and why.
 #
-# Every name here ran at master (8cd5eb5f6, 2026-09-15) on an M2 Pro. Names
+# Every name here ran at master (8cd5eb5f6, 2026-09-15) on an M2 Pro. One session
+# (RUNS=1) of the set is about 5 minutes there with COUNT=2 and the 300ms benchtime. Names
 # marked "since" do not exist at the older stable tags and are skipped there.
 # Names marked "(benchmarks/)" are this repo's own, copied into the checkout by
 # patches/add-benchmarks.sh and dropped again at a tag where they do not compile.
@@ -22,7 +23,7 @@ BenchmarkNoiseSentinelLoop
 
 # --- transaction verification (data/transactions/verify) --------------------
 BenchmarkTxn                    # one signed txn through verify, the ed25519 path
-BenchmarkPaysetGroups           # a block's groups through the verify execpool
+BenchmarkPaysetGroups           # a block's groups through the verify execpool, 2000 txns per pass; patches/fix-setup-heavy-benchmarks.sh makes the work independent of b.N
 BenchmarkTinyMan                # a real mainnet swap group: lsig eval, group check (3 subs)
 BenchmarkLogicSigSanityCheck    # LogicSigSanityCheck on the TinyMan escrow lsig: version, size, CheckSignature, hash compare (benchmarks/)
 
@@ -65,12 +66,9 @@ BenchmarkPrefetcherPayment      # account prefetch fan-out ahead of eval
 BenchmarkPrefetcherApps         # the same for app-call groups
 BenchmarkMakeStateDelta         # per-block delta allocation, 20 MB/op
 BenchmarkOnlineAccountsCacheRead320     # agreement-round online lookups
-BenchmarkBlockEvaluatorRAMNoCrypto      # 50k-txn block through Eval, ~14s setup, ~0.7s/op
-BenchmarkBlockEvaluatorRAMCrypto        # the same block through Ledger.Validate, signatures included; needs patches/fix-block-benchmarks-proposer.sh
-BenchmarkBlockValidationJustPayNoNew    # Eval plus AddBlock of payment blocks between existing accounts; same patch
-BenchmarkBlockValidationMix             # the same with payments, assets and app calls, new accounts included
-BenchmarkPay                    # full payment blocks under ConsensusFuture; since v5, fails on proposer at older tags
-BenchmarkAppInt1                # full app-call blocks, same harness
+BenchmarkBlockEvaluatorRAMNoCrypto      # 50k-txn block through Eval, ~6s setup, ~0.5s/op; patches/fix-setup-heavy-benchmarks.sh pins b.N to 2 so the setup runs once and the timed iteration is warm
+BenchmarkBlockValidationMix             # Eval plus AddBlock of blocks mixing payments, assets and app calls, new accounts included; same patch
+BenchmarkAppInt1                # full app-call blocks under ConsensusFuture; since v5, fails on proposer at older tags
 BenchmarkTxTailCheckDup         # txTail.checkDup hit and miss on 1000 rounds of txids, every incoming txn's dedup (2 subs) (benchmarks/)
 BenchmarkCompactResourceDeltas  # makeCompactResourceDeltas over 320 rounds of asset and app deltas, the resource half of a commit (benchmarks/)
 BenchmarkAccountDeltasOps       # AccountDeltas Upsert, MergeAccounts, OptimizeAllocatedMemory on ~4000 entries (3 subs) (benchmarks/)
@@ -83,8 +81,6 @@ BenchmarkVerify25519            # one verify, libsodium and ed25519consensus sid
 BenchmarkBatchVerifierImpls     # 64-signature batch, libsodium single, libsodium batch, ed25519consensus (3 subs)
 BenchmarkOneTimeSigBatchVerification    # the agreement vote signature, three backends (3 subs)
 BenchmarkVrfVerify              # VRF verify, libsodium; keygen per b.N in untimed setup
-BenchmarkAdd                    # Trie.Add, the catchpoint trie
-BenchmarkDelete                 # Trie.Delete, the catchpoint trie
 BenchmarkFalconVerify           # Falcon-1024 verify, once per revealed participant per state proof (benchmarks/)
 BenchmarkFalconSign             # Falcon-1024 sign, ~6 ms, once per state proof round per participant (benchmarks/)
 BenchmarkMerkleSignatureVerify  # merklesignature.Verifier.VerifyBytes: vector commitment path plus falcon, the full per-participant check (benchmarks/)
@@ -113,7 +109,13 @@ BenchmarkAppendMsgBlockHeader   # steps when the header grows (v4.2.1), not when
 # Not here, and why: ROADMAP.md, "Existing but deliberately not tracked".
 # MerkleCommit and MerkleVerify1M are grids over hash family x size.
 # BenchmarkSign (crypto) is covered by SignVerify; the secp256k1 one is the AVM's ecdsa path.
-# BlockEvaluator*Crypto, BlockValidation*, CryptoVerifierVoteVertification and
+# Dropped on 2026-09-18 to bring a run under ten minutes: BlockEvaluatorRAMCrypto,
+# BlockValidationJustPayNoNew and Pay were the third, fourth and fifth payment-block
+# benchmarks (RAMNoCrypto and BlockValidationMix stay, and the signature check is
+# eleven other series); merkletrie Add and Delete build a trie of b.N leaves and
+# measure an op on it, so their ns/op moves with -benchtime (Delete by 37%), and
+# Delete failed once in a hundred runs, which costs the whole session.
+# BlockValidationMix, CryptoVerifierVoteVertification and
 # TransactionPoolRecompute fail or cannot run at upstream master and run here
 # only because patches/ repairs or rewrites them. The txHandler backlog family
 # is repaired too but not trended: throughput tests with sub-benchmarks per

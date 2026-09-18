@@ -10,6 +10,16 @@ export BENCHSPOTTER_PATH="${BENCHSPOTTER_PATH:-$REPO_ROOT/.benchspotter}"
 CHECKOUT="${CHECKOUT:-$REPO_ROOT/checkout/go-algorand}"
 REMOTE="${REMOTE:-https://github.com/algorand/go-algorand.git}"
 TOOLCHAIN="${TOOLCHAIN:-pinned}"
+# -benchtime for every benchmark. go test reads GOFLAGS, so benchspotter needs
+# no flag for it. The Go default of 1s costs 2-4 s of ramp per -count repeat of
+# every series and buys nothing for a ns-to-ms benchmark; 300ms gave the same
+# ns/op within noise on all but the handful whose work scales with b.N, and
+# those are patched or gone (see lib/benches.txt). Recorded as a session tag,
+# benchtime:<value>, because a change here is a series break for the few that
+# remain sensitive to it: check-steps.py compares within one value only and the
+# site draws a rule where it changes.
+BENCHTIME="${BENCHTIME:-300ms}"
+export GOFLAGS="${GOFLAGS:+$GOFLAGS }-benchtime=$BENCHTIME"
 
 bs_preflight() {
   command -v benchspotter >/dev/null || { echo "benchspotter not on PATH" >&2; return 1; }
@@ -40,7 +50,15 @@ bs_prepare() {
   # --force discards the working tree edits patches/ made last time; without it
   # the previous run's patches survive into this one.
   git -C "$CHECKOUT" checkout --force --detach --quiet "$ref" || return 1
-  git -C "$CHECKOUT" clean -xfdq
+  # crypto/libs is the libsodium build, 40 s here and minutes on a 4-core
+  # runner, and its only input is the libsodium-fork submodule commit. Keep it
+  # across runs and drop it when that commit changes.
+  local sodium stamp="$CHECKOUT/crypto/libs/.benchspotter-libsodium"
+  sodium="$(git -C "$CHECKOUT" rev-parse "HEAD:crypto/libsodium-fork" 2>/dev/null)"
+  if [ -z "$sodium" ] || [ "$(cat "$stamp" 2>/dev/null)" != "$sodium" ]; then
+    rm -rf "$CHECKOUT/crypto/libs"
+  fi
+  git -C "$CHECKOUT" clean -xfdq -e crypto/libs
 
   BS_COMMIT="$(git -C "$CHECKOUT" rev-parse --short HEAD)"
   BS_COMMIT_DATE="$(git -C "$CHECKOUT" log -1 --format=%cs HEAD)"
@@ -60,12 +78,14 @@ bs_prepare() {
   BS_GOVERSION="$(cd "$CHECKOUT" && go version 2>"$logdir/$prefix.goversion.log" | awk '{print $3}')"
   [ -n "$BS_GOVERSION" ] || return 1
 
-  # crypto/libs is gitignored, so git clean removed it; the crypto package needs it.
+  # The crypto package needs libsodium; the make target is a no-op when the
+  # archive kept above is still there.
   local os arch
   os="$(cd "$CHECKOUT" && ./scripts/ostype.sh)"
   arch="$(cd "$CHECKOUT" && ./scripts/archtype.sh)"
   make -C "$CHECKOUT" "crypto/libs/$os/$arch/lib/libsodium.a" \
     >"$logdir/$prefix.libsodium.log" 2>&1 || return 1
+  [ -n "$sodium" ] && echo "$sodium" > "$stamp"
 
   # After the toolchain and libsodium: patches/zz-compile-gate.sh compiles
   # every package the patches touched, and that needs both.
@@ -111,6 +131,7 @@ bs_session_meta() {
   for t in "$@"; do benchspotter session tag "$id" "$t"; done
   [ -n "${BS_COMMIT_TIME:-}" ] && benchspotter session tag "$id" "commit:$BS_COMMIT_TIME"
   [ -n "${BS_CONSENSUS:-}" ] && benchspotter session tag "$id" "consensus:$BS_CONSENSUS"
+  benchspotter session tag "$id" "benchtime:$BENCHTIME"
   benchspotter session note "$id" "$note"
 }
 

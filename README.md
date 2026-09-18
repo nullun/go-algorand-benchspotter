@@ -16,7 +16,7 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 - `run-nightly.sh` - one set of sessions against a single ref, by default `origin/master`.
 - `run-sweep.sh` - the historical sweep over the stable tags that carry a go.mod toolchain
   directive, each built with the toolchain it names.
-- `lib/benches.txt` - the benchmark set, 45 names with a note on what each measures.
+- `lib/benches.txt` - the benchmark set, 67 names with a note on what each measures.
 - `lib/check-steps.py` - compares the newest point with the ones before it; the nightly runs it.
 - `benchmarks/` - benchmarks this repo carries that go-algorand does not have yet, one
   `benchspotter_<topic>_test.go` per topic under the package path it belongs to. They are copied
@@ -25,7 +25,8 @@ checkout they own, and the source edits a stable benchmark run needs are applied
   a copy and a PR away from go-algorand.
 - `patches/` - edits applied to the checkout before benchmarking: the noise sentinel, the
   ed25519 verifier pin, repairs for three upstream benchmarks that fail at master, a rewrite of
-  one that could not run and the removal of one that measured nothing (each also a commit on the
+  one that could not run, a fix for two whose setup and numbers followed b.N, and the removal of
+  one that measured nothing (each also a commit on the
   `bench/fix-broken-benchmarks` branch of the go-algorand clone, for upstream PRs).
 - `site/` - a static trend viewer published to GitHub Pages.
 - `ROADMAP.md` - the survey of every benchmark upstream: what is tracked, what was left out
@@ -38,11 +39,15 @@ go.mod toolchain directive of the ref under test decides the Go that actually co
 
     ./run-nightly.sh                      # origin/master
     ./run-nightly.sh v5.0.1-stable        # any ref
-    ./run-sweep.sh                        # every stable tag, oldest first, ~22 min each
+    ./run-sweep.sh                        # every stable tag, oldest first, ~15 min each
     ./run-sweep.sh v5.0.0-stable v5.0.1-stable
 
-Both take `RUNS`, `COUNT`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT`, `REMOTE` and `SKIP_IF_DONE`, and
-the nightly also `KIND` and `PROFILES`; the header of each script lists them. `SKIP_IF_DONE=1` is the default and drops work that is already
+Both take `RUNS`, `COUNT`, `BENCHTIME`, `BENCHES`, `TOOLCHAIN`, `CHECKOUT`, `REMOTE` and
+`SKIP_IF_DONE`, and the nightly also `KIND` and `PROFILES`; the header of each script lists them.
+The defaults are three runs of `-count 2` at `-benchtime 300ms`: six samples per series, three of
+them in separate processes, in about five minutes per run on an M2 Pro (the 111 leaf series each
+get their own `go test` process, so a run is mostly harness ramp and link time, and the 1s Go
+default doubled it for no gain in ns/op). `SKIP_IF_DONE=1` is the default and drops work that is already
 in the store: a commit with a `nightly` session, a tag with a `release` session. Pass
 `SKIP_IF_DONE=0` to measure something a second time. Results go to `.benchspotter` unless
 `BENCHSPOTTER_PATH` says otherwise.
@@ -72,7 +77,7 @@ so the step can be pinned to one merge. It refuses ranges over `max_commits` (20
 `.github/workflows/releases.yml` runs every hour too, half an hour offset, and does the same for
 `*-stable` tags: a cheap first job lists upstream's tags and proceeds only if one newer than the
 oldest measured tag has no `release` session. It takes at most `MAX_TAGS` (1) tag per run: with
-the 45-name set a tag is three sessions of ten minutes or more each, a GitHub-hosted job is
+the 67-name set a tag is three sessions of ten minutes or so each, a GitHub-hosted job is
 killed at 6 hours, and nothing is committed until the last tag finishes, so a backlog clears at
 one tag an hour rather than risking a long run that commits nothing.
 
@@ -159,7 +164,12 @@ Known artefacts, all worth checking before believing a jump:
   pins it to the Go implementation, which is what algod has defaulted to since v4.4.1. The v3 and
   v4 sessions in the M2 Pro archive predate the patch and are mostly libsodium numbers, so they
   are not comparable to production and not comparable to each other tag by tag.
-- The set grew from 6 names to 45 on 2026-09-17, so most series start there. Names that do
+- The set grew from 6 names to 45 on 2026-09-17 and to 72 the same day, so most series start
+  there. On 2026-09-18 five were dropped (three redundant payment-block benchmarks and the
+  merkletrie Add and Delete, whose ns/op follows the benchtime; `lib/benches.txt` says which) and
+  `-benchtime` went from the 1s Go default to 300ms. Sessions carry a `benchtime:` tag, the site
+  draws a rule where it changes, and `lib/check-steps.py` compares only within one value: the
+  series whose work scales with b.N moved at that rule and nothing else should have. Names that do
   not exist at a tag are skipped, and `BenchmarkPay` and `BenchmarkAppInt1` fail on the missing
   proposer at tags before v5, so a release sweep of an old tag would abort; the old tags are
   already measured.

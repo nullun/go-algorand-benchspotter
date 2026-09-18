@@ -11,7 +11,9 @@
 #   CHECKOUT      go-algorand clone to use (default ./checkout/go-algorand, created on demand)
 #   REMOTE        clone source (default https://github.com/algorand/go-algorand.git)
 #   RUNS          sessions recorded, each a fresh process (default 3)
-#   COUNT         -count passed to go test per session (default 4)
+#   COUNT         -count passed to go test per session (default 2; with RUNS=3 that is six
+#                 samples per series, three of them in separate processes)
+#   BENCHTIME     -benchtime for every benchmark, through GOFLAGS (default 300ms; lib/common.sh)
 #   TOOLCHAIN     "pinned" (default) uses the go.mod toolchain directive, "auto" the local Go
 #   BENCHES       space-separated benchmark regexps (default: the set in lib/benches.txt)
 #   RUNNER        label recorded as a session tag (default: runner:$(hostname -s))
@@ -31,7 +33,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 
 REF="${1:-origin/master}"
 RUNS="${RUNS:-3}"
-COUNT="${COUNT:-4}"
+COUNT="${COUNT:-2}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
 KIND="${KIND:-nightly}"
 PROFILES="${PROFILES:-}"
@@ -93,7 +95,7 @@ for run in $(seq 1 "$RUNS"); do
     rc_all=1
   fi
   bs_session_meta "$id" "$NAME" \
-    "$REF ($BS_COMMIT, $BS_COMMIT_DATE) built with $BS_GOVERSION, run $run/$RUNS, count $COUNT$partial" \
+    "$REF ($BS_COMMIT, $BS_COMMIT_DATE) built with $BS_GOVERSION, run $run/$RUNS, count $COUNT, benchtime $BENCHTIME$partial" \
     "$KIND" "run$run" "$BS_GOVERSION" "$RUNNER"
   echo "  run $run: session $id done in $((SECONDS-start))s${partial:+ (partial)}"
 done

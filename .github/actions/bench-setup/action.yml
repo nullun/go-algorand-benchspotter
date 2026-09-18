@@ -11,6 +11,21 @@ runs:
         # (TOOLCHAIN=pinned), this is just a bootstrap Go.
         cache: false
 
+    # The Go build cache and module cache (the go.mod toolchain downloads land
+    # there too), for a hosted runner that starts empty: without it every run
+    # compiles go-algorand's test packages cold, which was most of the gap to a
+    # warm machine. Always saved under a fresh key and restored from the newest,
+    # so it follows master. A self-hosted runner keeps ~/.cache anyway and the
+    # step is a cheap no-op there.
+    - uses: actions/cache@v4
+      if: runner.environment == 'github-hosted'
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: go-cache-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: go-cache-${{ runner.os }}-
+
     - name: Settings
       shell: bash
       run: |

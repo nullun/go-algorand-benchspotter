@@ -9,7 +9,9 @@ the site. Points are in commit order. The point checked is the one measured
 most recently, and it is compared with the --history points before it in
 history of the same kind (nightly against nightlies, release against releases)
 on the same runner, so an old tag measured late is judged against its
-neighbours, not against the newest nightlies. A step counts when it is
+neighbours, not against the newest nightlies. Only points measured with the
+same -benchtime count as baseline (tag benchtime:<value>, lib/common.sh), since
+a change there moves the series whose work scales with b.N. A step counts when it is
 larger than --min-pct and larger than --spread-factor times the widest spread
 (over every repeat of every run) seen in either the new point or the baseline
 points, so a
@@ -46,6 +48,12 @@ KINDS = ("nightly", "release", "range")
 
 def kind_of(session):
     return next((t for t in session["tags"] if t in KINDS), None)
+
+
+def benchtime_of(session):
+    """The -benchtime the session ran with. Sessions from before the tag ran
+    at the Go default."""
+    return next((t for t in session["tags"] if t.startswith("benchtime:")), "benchtime:1s")
 
 
 def commit_key(s):
@@ -99,7 +107,13 @@ def check(store, runner, kind, history, min_pct, spread_factor, unit):
     i = max(range(len(pts)), key=lambda k: max(s["time"] for s in pts[k]["sessions"]))
     if i == 0:
         return runner, None, []
-    new, base = pts[i], pts[max(0, i - history):i]
+    new = pts[i]
+    # A benchtime change moves the few series whose work scales with b.N, so
+    # the baseline is the last --history points that ran with the same one.
+    same = [p for p in pts[:i] if benchtime_of(p["sessions"][0]) == benchtime_of(new["sessions"][0])]
+    base = same[-history:]
+    if not base:
+        return runner, None, []
 
     rows = []
     for name in sorted({n for s in new["sessions"] for n in s["results"]}):

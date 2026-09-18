@@ -10,7 +10,8 @@
 # Environment overrides:
 #   CHECKOUT      go-algorand clone to use (default ./checkout/go-algorand, created on demand)
 #   REMOTE        clone source (default https://github.com/algorand/go-algorand.git)
-#   COUNT         -count passed to go test per session (default 4)
+#   COUNT         -count passed to go test per session (default 2)
+#   BENCHTIME     -benchtime for every benchmark, through GOFLAGS (default 300ms; lib/common.sh)
 #   RUNS          sessions recorded per tag, each a fresh process (default 3). Sessions share
 #                 the tag as name and are tagged run1..runN, so `trend --tag run1` gives one
 #                 clean series and `compare bench --session <id> ...` shows repeatability.
@@ -29,13 +30,14 @@
 # The sweep runs `git clean -xfdq` and `git checkout --detach` inside $CHECKOUT,
 # which it owns. This repo is only written to under $BENCHSPOTTER_PATH.
 #
-# One full sweep is roughly 21-24 minutes per tag with RUNS=3, COUNT=4.
+# One tag is roughly 15 minutes with RUNS=3, COUNT=2 and the 300ms benchtime on an M2 Pro;
+# about twice that on a 4-core hosted runner.
 set -u -o pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 . lib/common.sh
 
-COUNT="${COUNT:-4}"
+COUNT="${COUNT:-2}"
 RUNS="${RUNS:-3}"
 RUNNER="${RUNNER:-runner:$(hostname -s)}"
 SKIP_IF_DONE="${SKIP_IF_DONE:-1}"
@@ -168,7 +170,7 @@ for tag in "${TAGS[@]}"; do
     fi
 
     bs_session_meta "$id" "$tag" \
-      "$tag ($BS_COMMIT) built with $BS_GOVERSION, run $run/$RUNS, count $COUNT$partial" \
+      "$tag ($BS_COMMIT) built with $BS_GOVERSION, run $run/$RUNS, count $COUNT, benchtime $BENCHTIME$partial" \
       release "run$run" "$BS_GOVERSION" "$RUNNER"
 
     if [ -n "$partial" ]; then fail "run$run bench rc=$rc"; continue; fi
