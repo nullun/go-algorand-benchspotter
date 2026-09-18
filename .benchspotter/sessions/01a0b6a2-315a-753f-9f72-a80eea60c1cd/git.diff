@@ -1,0 +1,381 @@
+diff --git a/agreement/cryptoVerifier_test.go b/agreement/cryptoVerifier_test.go
+index 6ef8832e3..535c1c935 100644
+--- a/agreement/cryptoVerifier_test.go
++++ b/agreement/cryptoVerifier_test.go
+@@ -287,10 +287,11 @@ func BenchmarkCryptoVerifierVoteVertification(b *testing.B) {
+ 	ctx := context.Background()
+ 
+ 	verifier := makeCryptoVerifier(ledger, testBlockValidator{}, MakeAsyncVoteVerifier(nil), logging.Base())
+-	c := verifier.Verified(protocol.AgreementVoteTag)
++	c := verifier.VerifiedVotes() // patched by benchspotter
+ 
+-	senderIdx := findSender(ledger, basics.Round(300), 0, 0, addresses, selections)
+-	request := cryptoVoteRequest{message: makeMessage(0, protocol.AgreementVoteTag, addresses[senderIdx], ledger, selections[senderIdx], votings[senderIdx], 300, 0, 0), Round: ledger.NextRound()}
++	round := ledger.NextRound()
++	senderIdx := findSender(ledger, round, 0, 0, addresses, selections)
++	request := cryptoVoteRequest{message: makeMessage(0, protocol.AgreementVoteTag, addresses[senderIdx], ledger, selections[senderIdx], votings[senderIdx], round, 0, 0), Round: round}
+ 	b.ResetTimer()
+ 	go func() {
+ 		for n := 0; n < b.N; n++ {
+diff --git a/data/pools/transactionPool_test.go b/data/pools/transactionPool_test.go
+index 49824f9fa..c9ce8b714 100644
+--- a/data/pools/transactionPool_test.go
++++ b/data/pools/transactionPool_test.go
+@@ -23,9 +23,6 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"math/rand"
+-	"os"
+-	"runtime"
+-	"runtime/pprof"
+ 	"strings"
+ 	"testing"
+ 	"time"
+@@ -1017,100 +1014,6 @@ func BenchmarkTransactionPoolPending(b *testing.B) {
+ 	}
+ }
+ 
+-// BenchmarkTransactionPoolRecompute attempts to build a transaction pool of 3x block size
+-// and then calls recomputeBlockEvaluator, to update the pool given the just-committed txns.
+-// For b.N is does this process repeatedly given the size of N.
+-func BenchmarkTransactionPoolRecompute(b *testing.B) {
+-	b.Log("Running with b.N", b.N)
+-	poolSize := 100000
+-	numOfAccounts := 100
+-	numTransactions := 75000
+-	blockTxnCount := 25000
+-
+-	myVersion := protocol.ConsensusVersion("test-large-blocks")
+-	myProto := config.Consensus[protocol.ConsensusCurrentVersion]
+-	if myProto.MaxTxnBytesPerBlock != 5*1024*1024 {
+-		b.FailNow() // intended to use with 5MB blocks
+-	}
+-	config.Consensus[myVersion] = myProto
+-
+-	secrets, addresses := generateAccounts(numOfAccounts)
+-
+-	l := mockLedger(b, initAccFixed(addresses, 1<<50), myVersion)
+-	cfg := config.GetDefaultLocal()
+-	cfg.TxPoolSize = poolSize
+-
+-	setupPool := func() (*TransactionPool, map[transactions.Txid]ledgercore.IncludedTransactions, uint) {
+-		transactionPool := MakeTransactionPool(l, cfg, logging.Base(), nil)
+-
+-		// make some transactions
+-		var signedTransactions []transactions.SignedTxn
+-		for i := 0; i < numTransactions; i++ {
+-			tx := transactions.Transaction{
+-				Type: protocol.PaymentTx,
+-				Header: transactions.Header{
+-					Sender:      addresses[i%numOfAccounts],
+-					Fee:         basics.MicroAlgos{Raw: 20000 + proto.MinTxnFee},
+-					FirstValid:  0,
+-					LastValid:   basics.Round(proto.MaxTxnLife),
+-					GenesisHash: l.GenesisHash(),
+-				},
+-				PaymentTxnFields: transactions.PaymentTxnFields{
+-					Receiver: addresses[rand.Intn(numOfAccounts)],
+-					Amount:   basics.MicroAlgos{Raw: proto.MinBalance + uint64(rand.Intn(1<<32))},
+-				},
+-			}
+-
+-			signedTx := tx.Sign(secrets[i%numOfAccounts])
+-			signedTransactions = append(signedTransactions, signedTx)
+-			require.NoError(b, transactionPool.rememberOne(signedTx))
+-		}
+-
+-		// make args for recomputeBlockEvaluator() like OnNewBlock() would
+-		var knownCommitted uint
+-		committedTxIDs := make(map[transactions.Txid]ledgercore.IncludedTransactions)
+-		for i := 0; i < blockTxnCount; i++ {
+-			knownCommitted++
+-			// OK to use empty IncludedTransactions: recomputeBlockEvaluator is only checking map membership
+-			committedTxIDs[signedTransactions[i].ID()] = ledgercore.IncludedTransactions{}
+-		}
+-		b.Logf("Made transactionPool with %d signedTransactions, %d committedTxIDs, %d knownCommitted",
+-			len(signedTransactions), len(committedTxIDs), knownCommitted)
+-		b.Logf("transactionPool pendingTxGroups %d rememberedTxGroups %d",
+-			len(transactionPool.pendingTxGroups), len(transactionPool.rememberedTxGroups))
+-		return transactionPool, committedTxIDs, knownCommitted
+-	}
+-
+-	transactionPool := make([]*TransactionPool, b.N)
+-	committedTxIDs := make([]map[transactions.Txid]ledgercore.IncludedTransactions, b.N)
+-	knownCommitted := make([]uint, b.N)
+-	for i := 0; i < b.N; i++ {
+-		transactionPool[i], committedTxIDs[i], knownCommitted[i] = setupPool()
+-	}
+-	time.Sleep(time.Second)
+-	runtime.GC()
+-	// CPU profiler if CPUPROFILE set
+-	var profF *os.File
+-	if os.Getenv("CPUPROFILE") != "" {
+-		var err error
+-		profF, err = os.Create(fmt.Sprintf("recomputePool-%d-%d.prof", b.N, crypto.RandUint64()))
+-		require.NoError(b, err)
+-	}
+-
+-	// call recomputeBlockEvaluator
+-	if profF != nil {
+-		pprof.StartCPUProfile(profF)
+-	}
+-	b.ResetTimer()
+-	for i := 0; i < b.N; i++ {
+-		transactionPool[i].recomputeBlockEvaluator(committedTxIDs[i], knownCommitted[i])
+-	}
+-	b.StopTimer()
+-	if profF != nil {
+-		pprof.StopCPUProfile()
+-	}
+-}
+-
+ func BenchmarkTransactionPoolSteadyState(b *testing.B) {
+ 	poolSize := 100000
+ 
+diff --git a/data/transactions/verify/txn_test.go b/data/transactions/verify/txn_test.go
+index 7e3015ef0..2d0741568 100644
+--- a/data/transactions/verify/txn_test.go
++++ b/data/transactions/verify/txn_test.go
+@@ -64,7 +64,7 @@ var spec = transactions.SpecialAddresses{
+ }
+ 
+ func init() {
+-	useEd25519Consensus := crypto.RandUint64()%2 == 0
++	useEd25519Consensus := true // pinned by benchspotter
+ 	fmt.Printf("Using Ed25519ConsensusBatchVerifier: %v\n", useEd25519Consensus)
+ 	crypto.SetEd25519BatchVerifier(useEd25519Consensus)
+ }
+@@ -1015,10 +1015,12 @@ func TestPaysetGroups(t *testing.T) {
+ }
+ 
+ func BenchmarkPaysetGroups(b *testing.B) {
+-	if b.N < 2000 {
+-		b.N = 2000 //nolint:staticcheck // intentionally setting b.N
++	// patched by benchspotter: a fixed 2000 txns, verified as many times as b.N needs.
++	const paysetGroupsTxns = 2000
++	if b.N < paysetGroupsTxns {
++		b.N = paysetGroupsTxns //nolint:staticcheck // intentionally setting b.N
+ 	}
+-	_, signedTxn, secrets, addrs := generateTestObjects(b.N, 20, 0, 50)
++	_, signedTxn, secrets, addrs := generateTestObjects(paysetGroupsTxns, 20, 0, 50)
+ 	blkHdr := createDummyBlockHeader()
+ 
+ 	execPool := execpool.MakePool(b)
+@@ -1026,11 +1028,12 @@ func BenchmarkPaysetGroups(b *testing.B) {
+ 	defer verificationPool.Shutdown()
+ 
+ 	txnGroups := generateTransactionGroups(protoMaxGroupSize, signedTxn, secrets, addrs)
+-	cache := MakeVerifiedTransactionCache(50000)
+-
+ 	b.ResetTimer()
+-	err := PaysetGroups(context.Background(), txnGroups, blkHdr, verificationPool, cache, nil)
+-	require.NoError(b, err)
++	for done := 0; done < b.N; done += paysetGroupsTxns {
++		cache := MakeVerifiedTransactionCache(50000)
++		err := PaysetGroups(context.Background(), txnGroups, blkHdr, verificationPool, cache, nil)
++		require.NoError(b, err)
++	}
+ 	b.StopTimer()
+ }
+ 
+diff --git a/data/txHandler_test.go b/data/txHandler_test.go
+index d33e132b9..ec43a3dad 100644
+--- a/data/txHandler_test.go
++++ b/data/txHandler_test.go
+@@ -1215,6 +1215,9 @@ func incomingTxHandlerProcessing(maxGroupSize, numberOfTransactionGroups int, t
+ 	handler.ctx, handler.ctxCancel = context.WithCancel(context.Background())
+ 	defer handler.ctxCancel()
+ 	handler.streamVerifier.Start(handler.ctx)
++	if handler.erl != nil {
++		handler.erl.Start() // patched by benchspotter
++	}
+ 
+ 	testResultChan := make(chan *txBacklogMsg, 10)
+ 	wg := sync.WaitGroup{}
+@@ -1735,6 +1738,9 @@ func runHandlerBenchmarkWithBacklog(b *testing.B, txGen txGenIf, tps int, useBac
+ 	// emulate handler.Start() without the backlog
+ 	handler.ctx, handler.ctxCancel = context.WithCancel(context.Background())
+ 	handler.streamVerifier.Start(handler.ctx)
++	if handler.erl != nil {
++		handler.erl.Start() // patched by benchspotter
++	}
+ 
+ 	testResultChan := make(chan *txBacklogMsg, 10)
+ 	wg := sync.WaitGroup{}
+diff --git a/ledger/evalbench_test.go b/ledger/evalbench_test.go
+index 2fa2bc158..c9ae2ee29 100644
+--- a/ledger/evalbench_test.go
++++ b/ledger/evalbench_test.go
+@@ -36,6 +36,7 @@ import (
+ 	"github.com/algorand/go-algorand/crypto"
+ 	"github.com/algorand/go-algorand/data/basics"
+ 	"github.com/algorand/go-algorand/data/bookkeeping"
++	"github.com/algorand/go-algorand/data/committee"
+ 	"github.com/algorand/go-algorand/data/transactions"
+ 	"github.com/algorand/go-algorand/data/transactions/logic"
+ 	"github.com/algorand/go-algorand/ledger/eval"
+@@ -426,6 +427,10 @@ func testLedgerCleanup(l *Ledger, dbName string, inMem bool) {
+ 
+ // this variant focuses on benchmarking ledger.go `Eval()`, the rest is setup, it runs Eval() b.N times.
+ func benchmarkBlockEvaluator(b *testing.B, inMem bool, withCrypto bool, proto protocol.ConsensusVersion, txnSource BenchTxnGenerator) {
++	// patched by benchspotter: setup once, and the timed iteration is the warm one.
++	if b.N < 2 {
++		b.N = 2 //nolint:staticcheck // intentionally setting b.N
++	}
+ 	deadlockDisable := deadlock.Opts.Disable
+ 	deadlock.Opts.Disable = true
+ 	defer func() { deadlock.Opts.Disable = deadlockDisable }()
+@@ -529,7 +534,10 @@ func benchmarkPreparePaymentTransactionsTesting(b *testing.B, numTxns int, txnSo
+ 				// We are not setting seed & proposer details with
+ 				// FinishBlock/WithProposer. When agreement actually does that,
+ 				// it surely has some cost.
+-				vb := ledgercore.MakeValidatedBlock(unfinishedBlock.UnfinishedBlock(), unfinishedBlock.UnfinishedDeltas())
++				blk := unfinishedBlock.FinishBlock(committee.Seed{0x01}, basics.Address{0x01}, false) // patched by benchspotter
++				deltas := unfinishedBlock.UnfinishedDeltas()
++				deltas.Hdr = &blk.BlockHeader
++				vb := ledgercore.MakeValidatedBlock(blk, deltas)
+ 				validatedBlock = &vb
+ 				for _, l := range []*Ledger{l, l2} {
+ 					err = l.AddValidatedBlock(*validatedBlock, agreement.Certificate{})
+@@ -572,7 +580,10 @@ func benchmarkPreparePaymentTransactionsTesting(b *testing.B, numTxns int, txnSo
+ 	// as above - this might be an underestimate because we skip agreement
+ 	unfinishedBlock, err := bev.GenerateBlock(nil)
+ 	require.NoError(b, err)
+-	validatedBlock := ledgercore.MakeValidatedBlock(unfinishedBlock.UnfinishedBlock(), unfinishedBlock.UnfinishedDeltas())
++	blk := unfinishedBlock.FinishBlock(committee.Seed{0x01}, basics.Address{0x01}, false) // patched by benchspotter
++	deltas := unfinishedBlock.UnfinishedDeltas()
++	deltas.Hdr = &blk.BlockHeader
++	validatedBlock := ledgercore.MakeValidatedBlock(blk, deltas)
+ 
+ 	blockBuildDone := time.Now()
+ 	blockBuildTime := blockBuildDone.Sub(setupDone)
+diff --git a/ledger/fullblock_perf_test.go b/ledger/fullblock_perf_test.go
+index 13cbad8c2..5123b3a77 100644
+--- a/ledger/fullblock_perf_test.go
++++ b/ledger/fullblock_perf_test.go
+@@ -34,6 +34,7 @@ import (
+ 	"github.com/algorand/go-algorand/data/basics"
+ 	basics_testing "github.com/algorand/go-algorand/data/basics/testing"
+ 	"github.com/algorand/go-algorand/data/bookkeeping"
++	"github.com/algorand/go-algorand/data/committee"
+ 	"github.com/algorand/go-algorand/data/transactions"
+ 	"github.com/algorand/go-algorand/data/transactions/logic"
+ 	"github.com/algorand/go-algorand/data/transactions/verify"
+@@ -317,9 +318,10 @@ func addBlock(bc *benchConfig) {
+ 	vblk, err := bc.eval.GenerateBlock(nil)
+ 	cert := agreement.Certificate{}
+ 	require.NoError(bc.b, err)
+-	bc.blocks = append(bc.blocks, vblk.UnfinishedBlock())
++	blk := vblk.FinishBlock(committee.Seed{0x01}, basics.Address{0x01}, false) // patched by benchspotter
++	bc.blocks = append(bc.blocks, blk)
+ 
+-	err = bc.l0.AddBlock(vblk.UnfinishedBlock(), cert)
++	err = bc.l0.AddBlock(blk, cert)
+ 	require.NoError(bc.b, err)
+ 
+ 	_, last := bc.l0.LatestCommitted()
+@@ -392,7 +394,7 @@ func benchmarkBlockValidationMix(b *testing.B, newAcctProb, payProb, astProb flo
+ 
+ 	numBlocks := basics.Round(b.N)
+ 	cert := agreement.Certificate{}
+-	fmt.Printf("Preparing... /%d: ", numBlocks)
++	b.Logf("Preparing... /%d: ", numBlocks)
+ 	s3 := time.Now()
+ 
+ 	for bc.round < numBlocks {
+@@ -411,12 +413,12 @@ func benchmarkBlockValidationMix(b *testing.B, newAcctProb, payProb, astProb flo
+ 			}
+ 		}
+ 		if (currentRound+1)*10%(2*numBlocks) == 0 {
+-			fmt.Printf("%d%% %.1fs ", (currentRound+1)*100/numBlocks, time.Since(s3).Seconds())
++			b.Logf("%d%% %.1fs ", (currentRound+1)*100/numBlocks, time.Since(s3).Seconds())
+ 			s3 = time.Now()
+ 		}
+ 
+ 	}
+-	fmt.Printf("\nSummary %d blocks and %d txns: pay %d/blk (%d%%) assets %d/blk (%d%%) apps %d/blk (%d%%)\n",
++	b.Logf("\nSummary %d blocks and %d txns: pay %d/blk (%d%%) assets %d/blk (%d%%) apps %d/blk (%d%%)\n",
+ 		numBlocks, bc.txnCount, bc.numPay/b.N, bc.numPay*100/bc.txnCount, bc.numAst/b.N, bc.numAst*100/bc.txnCount, bc.numApp/b.N, bc.numApp*100/bc.txnCount)
+ 
+ 	// eval + add all the (valid) blocks to the second ledger, measuring it this time
+@@ -429,7 +431,7 @@ func benchmarkBlockValidationMix(b *testing.B, newAcctProb, payProb, astProb flo
+ 		err = bc.l1.AddBlock(blk, cert)
+ 		require.NoError(b, err)
+ 	}
+-	fmt.Printf("%.1f sec / %d blks\n", time.Since(tt).Seconds(), numBlocks)
++	b.Logf("%.1f sec / %d blks\n", time.Since(tt).Seconds(), numBlocks)
+ }
+ 
+ func createPaymentTransaction(
+diff --git a/protocol/encodebench_test.go b/protocol/encodebench_test.go
+deleted file mode 100644
+index 2cb15570b..000000000
+--- a/protocol/encodebench_test.go
++++ /dev/null
+@@ -1,66 +0,0 @@
+-// Copyright (C) 2019-2026 Algorand Foundation Ltd.
+-// This file is part of go-algorand
+-//
+-// go-algorand is free software: you can redistribute it and/or modify
+-// it under the terms of the GNU Affero General Public License as
+-// published by the Free Software Foundation, either version 3 of the
+-// License, or (at your option) any later version.
+-//
+-// go-algorand is distributed in the hope that it will be useful,
+-// but WITHOUT ANY WARRANTY; without even the implied warranty of
+-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-// GNU Affero General Public License for more details.
+-//
+-// You should have received a copy of the GNU Affero General Public License
+-// along with go-algorand.  If not, see <https://www.gnu.org/licenses/>.
+-
+-package protocol
+-
+-import (
+-	"testing"
+-
+-	"github.com/algorand/go-codec/codec"
+-)
+-
+-type s struct {
+-	_struct struct{} `codec:",omitempty,omitemptyarray"`
+-
+-	X [32]byte `codec:"x"`
+-}
+-
+-func BenchmarkCodecEncoder(b *testing.B) {
+-	var s s
+-	for i := 0; i < 32; i++ {
+-		s.X[i] = byte(i)
+-	}
+-
+-	b.Run("Nil", func(b *testing.B) {
+-		for i := 0; i < b.N; i++ {
+-			Encode(nil)
+-		}
+-	})
+-
+-	b.Run("NilReset", func(b *testing.B) {
+-		enc := codec.NewEncoderBytes(nil, CodecHandle)
+-		for i := 0; i < b.N; i++ {
+-			var b []byte
+-			enc.ResetBytes(&b)
+-			enc.MustEncode(nil)
+-		}
+-	})
+-
+-	b.Run("NilResetPrealloc", func(b *testing.B) {
+-		enc := codec.NewEncoderBytes(nil, CodecHandle)
+-		for i := 0; i < b.N; i++ {
+-			b := make([]byte, 256)
+-			enc.ResetBytes(&b)
+-			enc.MustEncode(nil)
+-		}
+-	})
+-
+-	b.Run("Encode", func(b *testing.B) {
+-		for i := 0; i < b.N; i++ {
+-			EncodeReflect(s)
+-		}
+-	})
+-}

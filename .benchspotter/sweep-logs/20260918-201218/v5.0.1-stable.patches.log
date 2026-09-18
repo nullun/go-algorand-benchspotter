@@ -1,0 +1,28 @@
+--- add-benchmarks.sh
+copied 20 benchmark files into 12 packages
+--- add-noise-sentinel.sh
+wrote /home/runner/.cache/go-algorand-bench/checkout/benchsentinel/sentinel_test.go
+--- fix-block-benchmarks-proposer.sh
+patched ledger/evalbench_test.go
+patched ledger/fullblock_perf_test.go
+progress output of ledger/fullblock_perf_test.go sent through b.Logf
+skip: ledger/ledger_perf_test.go already finishes its blocks or differs
+--- fix-prefetcher-benchmark-typed-nil.sh
+skip: Err is not a pointer at this ref
+--- fix-setup-heavy-benchmarks.sh
+patched ledger/evalbench_test.go
+patched data/transactions/verify/txn_test.go
+--- fix-txhandler-benchmark-rate-limiter.sh
+patched 2 harness(es) in /home/runner/.cache/go-algorand-bench/checkout/data/txHandler_test.go
+--- fix-vote-verifier-benchmark.sh
+289:	c := verifier.VerifiedVotes() // patched by benchspotter
+291:	round := ledger.NextRound()
+--- pin-ed25519-verifier.sh
+67:	useEd25519Consensus := true // pinned by benchspotter
+pinned useEd25519Consensus = true
+--- remove-codec-encoder-benchmark.sh
+removed /home/runner/.cache/go-algorand-bench/checkout/protocol/encodebench_test.go
+--- rewrite-txpool-recompute-benchmark.sh
+replaced BenchmarkTransactionPoolRecompute; new file /home/runner/.cache/go-algorand-bench/checkout/data/pools/transactionPool_bench_test.go
+--- zz-compile-gate.sh
+compile gate: 16 packages kept, 0 trimmed to upstream edits, 0 restored
