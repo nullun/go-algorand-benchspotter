@@ -16,7 +16,7 @@ checkout they own, and the source edits a stable benchmark run needs are applied
 - `run-ref.sh` - one set of sessions against a single ref, by default `origin/master`.
 - `run-sweep.sh` - the historical sweep over the stable tags from `v3.17.0-stable` on (`FLOOR`),
   each built with the Go upstream released it with.
-- `lib/benches.txt` - the benchmark set, 67 names with a note on what each measures.
+- `lib/benches.txt` - the benchmark set, 68 names with a note on what each measures.
 - `lib/check-steps.py` - compares the newest point with the ones before it; the master workflow runs it.
 - `benchmarks/` - benchmarks this repo carries that go-algorand does not have yet, one
   `benchspotter_<topic>_test.go` per topic under the package path it belongs to. They are copied
@@ -25,7 +25,8 @@ checkout they own, and the source edits a stable benchmark run needs are applied
   a copy and a PR away from go-algorand.
 - `patches/` - edits applied to the checkout before benchmarking: the noise sentinel, the
   ed25519 verifier pin, repairs for three upstream benchmarks that fail at master, a rewrite of
-  one that could not run, a fix for two whose setup and numbers followed b.N, the removal of
+  one that could not run, a fix for two whose setup and numbers followed b.N and a third of those
+  (`BenchmarkBatchVerifierImpls`, which upstream itself fixed at v5.0.0), the removal of
   one that measured nothing (each also a commit on the
   `bench/fix-broken-benchmarks` branch of the go-algorand clone, for upstream PRs), and a
   nil check for the two prefetcher benchmarks at the tags from v3.17.0 to v4.5.1, where a
@@ -182,6 +183,7 @@ Known artefacts, all worth checking before believing a jump:
   dropped (three redundant payment-block benchmarks and the merkletrie Add and Delete, whose
   ns/op follows the benchtime; `lib/benches.txt` says which), `-benchtime` went from the 1s Go
   default to 300ms, and the store was cleared so that every point on `main` is the same 67 names
+  (68 from 2026-09-21, when `BenchmarkBatchVerify` joined the set)
   at the same settings. Sessions carry a `benchtime:` tag, the site draws a rule where it changes,
   and `lib/check-steps.py` compares only within one value, so a later change here is a series
   break for the few benchmarks whose work scales with b.N and nothing else. Names that do not
@@ -195,3 +197,12 @@ Known artefacts, all worth checking before believing a jump:
 - `AppendMsgBlockHeader` steps +14% at v4.2.1 in the archive because msgp_gen was regenerated for
   a larger block header, not because anything got slower. `AppendMsgSignedTxn` is flat across the
   same commit, which is how you can tell.
+- `BenchmarkBatchVerifierImpls` drops 98% at v5.0.0 in every session recorded before 2026-09-21.
+  Nothing got faster: until v5.0.0 the benchmark made one `BatchVerifier` outside its timed loop
+  and reused it, and a `BatchVerifier` keeps everything enqueued until `Verify`, so iteration i
+  verified i*64 signatures and ns/op followed b.N. Upstream fixed it at v5.0.0;
+  `patches/fix-batchverifier-impls-benchmark.sh` applies the same edit to v4.4.1 through v4.7.4.
+  The points from v4.4.1 to v4.7.4 already in the store predate the patch and are worthless, so
+  the series only reads as one from v5.0.0 on until those six tags are measured again with
+  `SKIP_IF_DONE=0`. `BenchmarkBatchVerify` (`benchmarks/crypto`) covers the same ground back to
+  v3.17.0 and was correct from its first point.

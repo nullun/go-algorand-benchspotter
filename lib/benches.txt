@@ -78,7 +78,9 @@ BenchmarkApply                  # apply.AssetTransfer, Keyreg, ApplicationCall a
 BenchmarkHash                   # crypto.Hash of 32 bytes, sha512_256
 BenchmarkSignVerify             # ed25519 sign plus verify, libsodium
 BenchmarkVerify25519            # one verify, libsodium and ed25519consensus side by side (2 subs)
-BenchmarkBatchVerifierImpls     # 64-signature batch, libsodium single, libsodium batch, ed25519consensus (3 subs)
+BenchmarkBatchVerifierImpls     # 64-signature batch, libsodium single, libsodium batch, ed25519consensus (3 subs);
+                                # before v5.0.0 needs patches/fix-batchverifier-impls-benchmark.sh, which is where the 98% drop at that tag comes from
+BenchmarkBatchVerify            # the default batch verifier through the exported API, batches of 1, 64 and 256 (3 subs) (benchmarks/)
 BenchmarkOneTimeSigBatchVerification    # the agreement vote signature, three backends (3 subs)
 BenchmarkVrfVerify              # VRF verify, libsodium; keygen per b.N in untimed setup
 BenchmarkFalconVerify           # Falcon-1024 verify, once per revealed participant per state proof (benchmarks/)

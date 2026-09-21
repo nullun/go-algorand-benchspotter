@@ -62,6 +62,14 @@ what lets one `lib/benches.txt` serve every tag.
 Flat or few-sub, deterministic, no grid over sizes, under a few seconds at default benchtime.
 See the file for the list; the notes there say what each one measures.
 
+Where an upstream benchmark only exists at recent tags, or asks a question that needs unexported
+names, a benchmark of this repo's own in `benchmarks/` can cover the same ground over the whole
+sweep through the exported API. `BenchmarkBatchVerify` is the first of those: upstream's
+`BenchmarkBatchVerifierImpls` compares the three implementations and starts at v4.4.1, while this
+one measures whichever verifier a ref makes by default and runs back to v3.17.0. It already shows
+something the upstream one cannot: a 64-signature batch costs 1.16 ms at v3.17.0 and 2.60 ms at
+v4.7.4 on an M2 Pro, which is `useSingleVerifierDefault` arriving with the interface at v3.24.0.
+
 ### Existing but deliberately not tracked
 
 Grids over sizes or counts whose cells move together, in the pattern of the retired
@@ -143,6 +151,14 @@ on the branch only, since nothing here would trend it.
   nothing committed between iterations, so each op is the re-evaluation of one full block's
   worth of pending transactions: about 0.74 s/op, 26 us per txn, reported as `ns/txn` too.
   Tracked.
+
+- [x] **`BenchmarkBatchVerifierImpls` before v5.0.0** (crypto/batchverifier_bench_test.go:63 at
+  v4.7.4). Not broken, wrong: one `BatchVerifier` is made outside the timed loop and reused, and
+  nothing enqueued is ever dropped before `Verify`, so iteration i verifies i*64 signatures and
+  ns/op grows with b.N. Upstream fixed it at v5.0.0 by passing a constructor;
+  `patches/fix-batchverifier-impls-benchmark.sh` applies the same edit to v4.4.1 through v4.7.4,
+  where the text of the function is identical. Nothing for the branch: master already has the fix.
+  Verified at v4.7.4 by running the patched benchmark at 100ms and 1s, which now agree within 1%.
 
 The exclusions this repo recorded for `BenchmarkBlockEvaluatorRAM*` and `BenchmarkPrefetcherPayment`
 were partly stale: the `NoCrypto` variants call `Eval` with validation off so the proposer check
