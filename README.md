@@ -130,8 +130,21 @@ series tends to step there at once, and another where `ConsensusCurrentVersion` 
 is when new rules land in the ledger benchmarks. Each kind has its own colour (purple for the
 toolchain, amber for consensus, grey for a benchtime change) and a legend under the chart. Both come from session tags the scripts record
 (`go1.25.3`, `consensus:v42`); `lib/backfill-tags.sh` adds them to older sessions. Clicking a point opens the upstream compare view between
-it and the previous point, which is the list of PRs that could have moved it. The noise
-sentinel toggle overlays the sentinel's relative movement on the current series (see below).
+it and the previous point, which is the list of PRs that could have moved it.
+
+The noise sentinel has two toggles. **normalise**, on by default, divides every ns/op value by
+the sentinel of its own point and scales the result to the newest point's machine, which takes
+most of a change of runner out of the series; **overlay** instead draws the sentinel's relative
+movement alongside, so a step both lines take can be read as the machine. They are mutually
+exclusive, since a normalised sentinel is flat by construction. Normalising divides by
+`NoiseSentinelLoop` rather than `NoiseSentinelHash`: the loop is clock speed and nothing else,
+while the hash moved 3.4x between Go 1.20 and Go 1.21 on one machine when the standard library's
+sha256 changed, and dividing by that would push a compiler change into every other series.
+
+It is a correction and not a cure. Across the release sweep, which ran on four different hosted
+CPUs, it took the +35% step into the master point down to +3% and halved a -26% one to -14%,
+and on the two boundaries where the machines happened to agree it introduced up to 8% of its
+own. Two points from one machine are always worth more than two that had to be corrected.
 
 `.github/workflows/pages.yml` publishes it. Enable Pages for the repo with "GitHub Actions" as
 the source, and give Actions write permission to contents (Settings > Actions > General) or the
@@ -169,7 +182,7 @@ smaller than the spread of its own point, which the site draws as the band aroun
 adds them to the checkout: a sha256 over a fixed buffer and a dependent integer loop, the same
 work at every ref. When they move, the machine did, and a step every other series took with
 them is the runner rather than upstream. `lib/check-steps.py` says so in its report, and the
-site can overlay them on any series.
+site can overlay them on any series or divide them out of it.
 
 Known artefacts, all worth checking before believing a jump:
 

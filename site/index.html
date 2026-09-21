@@ -95,6 +95,7 @@
       </div>
       <div id="overlay" hidden>
         <label for="sentinel">noise sentinel</label>
+        <label style="color: var(--fg)"><input id="normalise" type="checkbox" checked> normalise</label>
         <label style="color: var(--fg)"><input id="sentinel" type="checkbox"> overlay</label>
       </div>
       <div id="runners" hidden>
@@ -110,7 +111,11 @@
     <p class="meta" id="chartmeta"></p>
     <p class="meta legend">Dashed rules mark a change in the <span class="go">Go toolchain</span>
       that built the code, the <span class="consensus">consensus version</span>, or the benchtime
-      (grey). Every series tends to step at a toolchain change; the ledger ones at a consensus change.</p>
+      (grey). Every series tends to step at a toolchain change; the ledger ones at a consensus change.
+      With <b>normalise</b> on, every value is divided by the noise sentinel of its own point, which
+      takes out most of what a change of machine does to the numbers. It is a correction, not a
+      cure: it left 3% of a 35% machine step on the sweep's worst boundary and 14% of another.
+      Two points from one machine are always worth more than two that needed correcting.</p>
   </div>
 </div>
 <div class="tip" id="tip"></div>
@@ -138,7 +143,16 @@ const consensusOf = s => s.consensus || "";
 const benchtimeOf = s => (s.tags.find(t => t.startsWith("benchtime:")) || "benchtime:1s").slice(10);
 // The sentinel series come from a benchmark that does not depend on go-algorand
 // (patches/add-noise-sentinel.sh): when they move, the machine did.
-const SENTINEL = "BenchmarkNoiseSentinelHash";
+//
+// Loop is the one to divide by. It is a dependent integer chain with no memory
+// traffic, so it tracks clock speed and nothing else: over the release sweep it
+// stayed within 3% wherever the machine did, across five Go versions.
+// NoiseSentinelHash moved 3.4x between Go 1.20 and Go 1.21 on one machine,
+// because the standard library's sha256 changed and not the hardware, so
+// dividing by it would push that compiler change into every other series.
+const SENTINEL = "BenchmarkNoiseSentinelLoop";
+// Series are keyed "package: BenchmarkName", so the bare name has to be resolved.
+const sentinelKey = name => Object.keys(DATA.series).find(k => k.endsWith(": " + name) || k === name);
 const UPSTREAM = "https://github.com/algorand/go-algorand";
 
 // A session is a release, a master or a range point (a commit between two
@@ -195,15 +209,43 @@ function draw() {
     const n = rs.length ? rs.reduce((a, r) => a + r[2], 0) : vs.length;
     points.push({ g, v: median(vs), lo, hi, n, runs: vs.length });
   }
-  // Sentinel overlay: the sentinel's relative movement, scaled to start where
-  // this series starts. A step both lines take is the runner.
-  const showSentinel = $("sentinel").checked && name !== SENTINEL && (DATA.series[SENTINEL] || {})[unit];
+  // The sentinel measures the machine and nothing else, so the ratio between
+  // two of its points is what the hardware did between them. Two ways to use
+  // that: normalise, which divides it out of every value, or overlay, which
+  // draws it alongside so a step both lines take can be read as the runner.
+  // Only ns/op is worth normalising; B/op and allocs/op do not depend on the
+  // machine, and the sentinel cannot normalise itself.
+  const skey = sentinelKey(SENTINEL);
+  const sentinelValues = skey && name !== skey && unit === "ns/op" ? DATA.series[skey][unit] : null;
+  if (sentinelValues) {
+    for (const p of points) {
+      const vs = p.g.idx.map(i => sentinelValues[i]).filter(v => v != null);
+      p.sent = vs.length ? median(vs) : null;
+    }
+  }
+  // All or nothing: one point normalised against a sentinel the next point
+  // does not have would put two scales on one line without saying so.
+  const canNormalise = !!sentinelValues && points.length > 0 && points.every(p => p.sent != null);
+  $("normalise").disabled = !canNormalise;
+  const normalise = canNormalise && $("normalise").checked;
+  if (normalise) {
+    // The newest point is the baseline, so the axis reads in the units of the
+    // machine that took the most recent measurement rather than some machine
+    // that ran three years ago.
+    const base = points[points.length - 1].sent;
+    for (const p of points) {
+      const f = base / p.sent;
+      p.raw = p.v;
+      p.v *= f; p.lo *= f; p.hi *= f;
+    }
+  }
+  // Normalised, the sentinel is flat by construction and the overlay says nothing.
+  $("sentinel").disabled = normalise;
+  const showSentinel = $("sentinel").checked && !normalise && sentinelValues;
   if (showSentinel) {
-    const sv = DATA.series[SENTINEL][unit];
     let base = null;
     for (const p of points) {
-      const vs = p.g.idx.map(i => sv[i]).filter(v => v != null);
-      p.s = vs.length ? median(vs) : null;
+      p.s = p.sent;
       if (base == null && p.s != null) base = { s: p.s, v: p.v };
     }
     for (const p of points) p.s = p.s == null || !base ? null : p.s / base.s * base.v;
@@ -285,7 +327,9 @@ function draw() {
   const sessions = points.reduce((n, p) => n + p.runs, 0);
   $("chartmeta").textContent =
     `${points.length} points (${sessions} sessions), ${fmt(first.v, unit)} at ${first.g.label}` +
-    ` to ${fmt(last.v, unit)} at ${last.g.label} (${change >= 0 ? "+" : ""}${change.toFixed(1)}%)`;
+    ` to ${fmt(last.v, unit)} at ${last.g.label} (${change >= 0 ? "+" : ""}${change.toFixed(1)}%)` +
+    (normalise ? `, divided by the noise sentinel and scaled to the machine of ${last.g.label}`
+     : canNormalise ? ", as measured" : "");
 
   chart.querySelectorAll(".hit").forEach(c => {
     c.addEventListener("mouseenter", () => {
@@ -297,6 +341,7 @@ function draw() {
         (s.commit_time ? `committed ${s.commit_time.slice(0, 16).replace("T", " ")}, ` : "") +
         `measured ${s.time.slice(0, 16).replace("T", " ")}<br>` +
         `${fmt(p.v, unit)}` +
+        (p.raw == null ? "" : ` <span class="meta">(measured ${fmt(p.raw, unit)}, sentinel ${fmt(p.sent, unit)})</span>`) +
         (d == null ? "" : ` <span class="delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${d.toFixed(1)}%</span>`) +
         (spread == null ? "" : `<br><span class="meta">${p.n} samples in ${p.runs} run${p.runs > 1 ? "s" : ""}, ${fmt(p.lo, unit)} to ${fmt(p.hi, unit)}, spread ${spread.toFixed(1)}%</span>`) +
         (p.s == null || !k || points[k - 1].s == null ? "" : `<br><span class="meta">sentinel ${((p.s / points[k - 1].s - 1) * 100).toFixed(1)}% vs previous point</span>`) +
@@ -367,8 +412,9 @@ fetch("data.json").then(r => r.json()).then(data => {
     `<label><input type="checkbox" value="${k}" checked> ${KINDS[k]}</label>`).join("");
   $("kinds").hidden = kinds.length < 2;
   $("kinds").addEventListener("change", draw);
-  $("overlay").hidden = !(data.series[SENTINEL] || {})["ns/op"];
+  $("overlay").hidden = !sentinelKey(SENTINEL);
   $("sentinel").addEventListener("change", draw);
+  $("normalise").addEventListener("change", draw);
 
   const runners = [...new Set(data.sessions.map(runnerOf))].sort();
   $("runner").innerHTML = runners.map(r => `<option>${r}</option>`).join("");
