@@ -1,0 +1,309 @@
+goos: linux
+goarch: amd64
+pkg: github.com/algorand/go-algorand/agreement
+cpu: AMD EPYC 9V74 80-Core Processor                
+
+BenchmarkVoteVerify-4 846 409801 ns/op 6888 B/op 65 allocs/op
+BenchmarkVoteVerify-4 844 412813 ns/op 6888 B/op 65 allocs/op
+BenchmarkCryptoVerifierVoteVertification-4 2018 188917 ns/op 24016 B/op 71 allocs/op
+BenchmarkCryptoVerifierVoteVertification-4 2050 179018 ns/op 24002 B/op 71 allocs/op
+BenchmarkCryptoVerifierProposalVertification-4 1386 248878 ns/op 12474 B/op 54 allocs/op
+BenchmarkCryptoVerifierProposalVertification-4 1432 252357 ns/op 12474 B/op 54 allocs/op
+BenchmarkVoteDecoding-4 1088960 309.7 ns/op 1152 B/op 2 allocs/op
+BenchmarkVoteDecoding-4 1083991 309 ns/op 1152 B/op 2 allocs/op
+BenchmarkRouterUpdate/root-4 3657038 93.76 ns/op 0 B/op 0 allocs/op
+BenchmarkRouterUpdate/root-4 3703034 96.58 ns/op 0 B/op 0 allocs/op
+BenchmarkRouterUpdate/round-4 6317210 56.77 ns/op 0 B/op 0 allocs/op
+BenchmarkRouterUpdate/round-4 6354735 57.25 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/benchsentinel
+
+BenchmarkNoiseSentinelHash-4 9733 36135 ns/op 1813.62 MB/s 0 B/op 0 allocs/op
+BenchmarkNoiseSentinelHash-4 9872 36152 ns/op 1812.79 MB/s 0 B/op 0 allocs/op
+BenchmarkNoiseSentinelLoop-4 53706 6701 ns/op 0 B/op 0 allocs/op
+BenchmarkNoiseSentinelLoop-4 53721 6692 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/crypto
+
+BenchmarkBatchVerifierImpls/libsodium_single-4 90 3.984111e+06 ns/op 21264 B/op 261 allocs/op
+BenchmarkBatchVerifierImpls/libsodium_single-4 90 3.986277e+06 ns/op 21264 B/op 261 allocs/op
+BenchmarkBatchVerifierImpls/libsodium_batch-4 218 1.640943e+06 ns/op 26064 B/op 12 allocs/op
+BenchmarkBatchVerifierImpls/libsodium_batch-4 222 1.615552e+06 ns/op 26064 B/op 12 allocs/op
+BenchmarkBatchVerifierImpls/ed25519consensus-4 225 1.569327e+06 ns/op 270016 B/op 137 allocs/op
+BenchmarkBatchVerifierImpls/ed25519consensus-4 225 1.61909e+06 ns/op 270016 B/op 137 allocs/op
+BenchmarkHash-4 1664866 215.1 ns/op 0 B/op 0 allocs/op
+BenchmarkHash-4 1673595 214.6 ns/op 0 B/op 0 allocs/op
+BenchmarkSignVerify-4 4652 76289 ns/op 336 B/op 10 allocs/op
+BenchmarkSignVerify-4 4693 76843 ns/op 336 B/op 10 allocs/op
+BenchmarkVerify25519/libsodium-4 5596 63085 ns/op 128 B/op 4 allocs/op
+BenchmarkVerify25519/libsodium-4 5824 63362 ns/op 128 B/op 4 allocs/op
+BenchmarkVerify25519/ed25519consensus-4 6802 53032 ns/op 32 B/op 2 allocs/op
+BenchmarkVerify25519/ed25519consensus-4 6555 52976 ns/op 32 B/op 2 allocs/op
+BenchmarkOneTimeSigBatchVerification/libsodium_singles-4 1892 184760 ns/op 1304 B/op 24 allocs/op
+BenchmarkOneTimeSigBatchVerification/libsodium_singles-4 1956 185018 ns/op 1303 B/op 24 allocs/op
+BenchmarkOneTimeSigBatchVerification/libsodium_batch-4 2202 159896 ns/op 1146 B/op 17 allocs/op
+BenchmarkOneTimeSigBatchVerification/libsodium_batch-4 2269 159288 ns/op 1144 B/op 17 allocs/op
+BenchmarkOneTimeSigBatchVerification/ed25519consensus_batch-4 3037 114043 ns/op 14320 B/op 22 allocs/op
+BenchmarkOneTimeSigBatchVerification/ed25519consensus_batch-4 3084 113588 ns/op 14319 B/op 22 allocs/op
+BenchmarkVrfVerify-4 1753 208978 ns/op 176 B/op 3 allocs/op
+BenchmarkVrfVerify-4 1749 220898 ns/op 176 B/op 3 allocs/op
+
+pkg: github.com/algorand/go-algorand/data
+
+BenchmarkAppRateLimiter_TxgroupToKeys-4 19107 18781 ns/op 9512 B/op 3 allocs/op
+BenchmarkAppRateLimiter_TxgroupToKeys-4 23131 18712 ns/op 9512 B/op 3 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/basics
+
+BenchmarkAddressFormatting-4 1301833 278.6 ns/op 128 B/op 2 allocs/op
+BenchmarkAddressFormatting-4 1280772 275 ns/op 128 B/op 2 allocs/op
+BenchmarkUnmarshalChecksumAddress-4 504765 663 ns/op 192 B/op 3 allocs/op
+BenchmarkUnmarshalChecksumAddress-4 512270 672.9 ns/op 192 B/op 3 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/bookkeeping
+
+BenchmarkCodecRealistic/encode-signed-pay-4 542449 666.3 ns/op 2688 B/op 1 allocs/op
+BenchmarkCodecRealistic/encode-signed-pay-4 541848 645.9 ns/op 2688 B/op 1 allocs/op
+BenchmarkCodecRealistic/decode-signed-pay-4 1851819 192 ns/op 64 B/op 3 allocs/op
+BenchmarkCodecRealistic/decode-signed-pay-4 1865156 192.1 ns/op 64 B/op 3 allocs/op
+BenchmarkCodecRealistic/encode-signed-appl-4 413005 741.8 ns/op 3072 B/op 1 allocs/op
+BenchmarkCodecRealistic/encode-signed-appl-4 438606 731.4 ns/op 3072 B/op 1 allocs/op
+BenchmarkCodecRealistic/decode-signed-appl-4 728902 493.1 ns/op 376 B/op 13 allocs/op
+BenchmarkCodecRealistic/decode-signed-appl-4 720109 488.6 ns/op 376 B/op 13 allocs/op
+BenchmarkCodecRealistic/encode-block-header-4 549148 656.8 ns/op 1824 B/op 3 allocs/op
+BenchmarkCodecRealistic/encode-block-header-4 468132 653.7 ns/op 1824 B/op 3 allocs/op
+BenchmarkCodecRealistic/decode-block-header-4 559762 644.7 ns/op 720 B/op 9 allocs/op
+BenchmarkCodecRealistic/decode-block-header-4 445785 681.6 ns/op 720 B/op 9 allocs/op
+BenchmarkHashObj/txn-4 229830 1390 ns/op 3936 B/op 3 allocs/op
+BenchmarkHashObj/txn-4 241224 1341 ns/op 3936 B/op 3 allocs/op
+BenchmarkHashObj/block-header-4 137157 2458 ns/op 3552 B/op 5 allocs/op
+BenchmarkHashObj/block-header-4 137058 2652 ns/op 3552 B/op 5 allocs/op
+BenchmarkAppendMsgBlockHeader-4 7531518 48.1 ns/op 20.79 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgBlockHeader-4 7486582 47.91 ns/op 20.87 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/committee
+
+BenchmarkSortition-4 804 452294 ns/op 1824 B/op 21 allocs/op
+BenchmarkSortition-4 790 450361 ns/op 1825 B/op 21 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/pools
+
+BenchmarkStatusCachePut-4 344946 1014 ns/op 220 B/op 1 allocs/op
+BenchmarkStatusCachePut-4 327542 1017 ns/op 220 B/op 1 allocs/op
+BenchmarkStatusCacheCheckHit-4 1545777 231.8 ns/op 19 B/op 2 allocs/op
+BenchmarkStatusCacheCheckHit-4 1542666 233.2 ns/op 19 B/op 2 allocs/op
+BenchmarkStatusCacheCheckMiss-4 4181595 86.3 ns/op 0 B/op 0 allocs/op
+BenchmarkStatusCacheCheckMiss-4 4191739 86.03 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions
+
+BenchmarkTxnIDs/signed-txn-id-4 608720 591.4 ns/op 0 B/op 0 allocs/op
+BenchmarkTxnIDs/signed-txn-id-4 608360 589.1 ns/op 0 B/op 0 allocs/op
+BenchmarkTxnIDs/group-id-4 23773 14892 ns/op 2276 B/op 4 allocs/op
+BenchmarkTxnIDs/group-id-4 23882 14882 ns/op 2270 B/op 4 allocs/op
+BenchmarkWellFormed/pay-4 2452747 148.1 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/pay-4 2431012 150.5 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/axfer-4 2757691 130.9 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/axfer-4 2747092 131.1 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/acfg-4 2671936 131.4 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/acfg-4 2660569 134.7 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/appl-4 2133496 166.3 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/appl-4 2174793 169.9 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/keyreg-4 2092081 171.5 ns/op 0 B/op 0 allocs/op
+BenchmarkWellFormed/keyreg-4 2112543 172.1 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions/logic
+
+BenchmarkAssemble-4 1322 242523 ns/op 328780 B/op 3260 allocs/op
+BenchmarkAssemble-4 1484 241185 ns/op 328780 B/op 3260 allocs/op
+BenchmarkDisassemble-4 7698 47043 ns/op 49982 B/op 888 allocs/op
+BenchmarkDisassemble-4 6730 46500 ns/op 49982 B/op 888 allocs/op
+BenchmarkBoxOps/box_get-4 165832 2146 ns/op 3 extra/op 3364 B/op 33 allocs/op
+BenchmarkBoxOps/box_get-4 166339 2131 ns/op 3 extra/op 3363 B/op 33 allocs/op
+BenchmarkBoxOps/box_len-4 195901 1780 ns/op 3 extra/op 1023 B/op 31 allocs/op
+BenchmarkBoxOps/box_len-4 198193 1788 ns/op 3 extra/op 1023 B/op 31 allocs/op
+BenchmarkBoxOps/box_extract-4 160330 2114 ns/op 4 extra/op 1521 B/op 37 allocs/op
+BenchmarkBoxOps/box_extract-4 167262 2110 ns/op 4 extra/op 1521 B/op 37 allocs/op
+BenchmarkBoxOps/box_replace-4 181165 1931 ns/op 3 extra/op 1308 B/op 34 allocs/op
+BenchmarkBoxOps/box_replace-4 180718 1936 ns/op 3 extra/op 1308 B/op 34 allocs/op
+BenchmarkBoxOps/box_splice-4 144044 2447 ns/op 4 extra/op 1625 B/op 42 allocs/op
+BenchmarkBoxOps/box_splice-4 145962 2382 ns/op 4 extra/op 1626 B/op 42 allocs/op
+BenchmarkBoxOps/box_put-4 177760 1945 ns/op 3 extra/op 2087 B/op 31 allocs/op
+BenchmarkBoxOps/box_put-4 181764 1948 ns/op 3 extra/op 2087 B/op 31 allocs/op
+BenchmarkBoxOps/box_resize-4 82132 4211 ns/op 5 extra/op 1722 B/op 52 allocs/op
+BenchmarkBoxOps/box_resize-4 83190 4224 ns/op 5 extra/op 1722 B/op 52 allocs/op
+BenchmarkBoxOps/box_create_del-4 90788 3879 ns/op 6 extra/op 1777 B/op 54 allocs/op
+BenchmarkBoxOps/box_create_del-4 90176 3860 ns/op 6 extra/op 1778 B/op 54 allocs/op
+BenchmarkInnerTxn/pay-4 23360 15252 ns/op 24581 B/op 127 allocs/op
+BenchmarkInnerTxn/pay-4 23239 15168 ns/op 24580 B/op 127 allocs/op
+BenchmarkInnerTxn/axfer-4 22602 15868 ns/op 25180 B/op 134 allocs/op
+BenchmarkInnerTxn/axfer-4 22534 15740 ns/op 25180 B/op 134 allocs/op
+BenchmarkInnerTxn/appl-4 23304 15267 ns/op 33110 B/op 100 allocs/op
+BenchmarkInnerTxn/appl-4 23005 15419 ns/op 33110 B/op 100 allocs/op
+BenchmarkStateOps/app_global_get-4 317046 1077 ns/op 2 extra/op 677 B/op 21 allocs/op
+BenchmarkStateOps/app_global_get-4 336757 1065 ns/op 2 extra/op 677 B/op 21 allocs/op
+BenchmarkStateOps/app_global_put-4 212617 1618 ns/op 2 extra/op 1353 B/op 27 allocs/op
+BenchmarkStateOps/app_global_put-4 218914 1611 ns/op 2 extra/op 1353 B/op 27 allocs/op
+BenchmarkStateOps/app_global_del-4 401715 801.2 ns/op 1 extra/op 499 B/op 15 allocs/op
+BenchmarkStateOps/app_global_del-4 414363 775.8 ns/op 1 extra/op 499 B/op 15 allocs/op
+BenchmarkStateOps/app_local_get-4 220569 1577 ns/op 3 extra/op 912 B/op 29 allocs/op
+BenchmarkStateOps/app_local_get-4 224103 1577 ns/op 3 extra/op 912 B/op 29 allocs/op
+BenchmarkStateOps/app_local_put-4 190474 1830 ns/op 3 extra/op 1165 B/op 33 allocs/op
+BenchmarkStateOps/app_local_put-4 191464 1828 ns/op 3 extra/op 1165 B/op 33 allocs/op
+BenchmarkStateOps/app_local_del-4 258577 1287 ns/op 2 extra/op 702 B/op 23 allocs/op
+BenchmarkStateOps/app_local_del-4 277340 1278 ns/op 2 extra/op 702 B/op 23 allocs/op
+BenchmarkStateOps/asset_holding_get-4 165754 2150 ns/op 4 extra/op 1276 B/op 36 allocs/op
+BenchmarkStateOps/asset_holding_get-4 164362 2126 ns/op 4 extra/op 1277 B/op 36 allocs/op
+BenchmarkStateOps/asset_params_get-4 188684 1847 ns/op 3 extra/op 1509 B/op 34 allocs/op
+BenchmarkStateOps/asset_params_get-4 191306 1840 ns/op 3 extra/op 1509 B/op 34 allocs/op
+BenchmarkStateOps/app_params_get-4 201744 1746 ns/op 3 extra/op 1325 B/op 30 allocs/op
+BenchmarkStateOps/app_params_get-4 202754 1753 ns/op 3 extra/op 1325 B/op 30 allocs/op
+BenchmarkStateOps/acct_params_get-4 122910 2871 ns/op 3 extra/op 1709 B/op 36 allocs/op
+BenchmarkStateOps/acct_params_get-4 123018 2919 ns/op 3 extra/op 1709 B/op 36 allocs/op
+BenchmarkVerify/pop-4 8393727 42.39 ns/op 3 extra/op 6 B/op 0 allocs/op
+BenchmarkVerify/pop-4 7623979 43 ns/op 3 extra/op 6 B/op 0 allocs/op
+BenchmarkVerify/add-4 7710026 46.34 ns/op 3 extra/op 6 B/op 0 allocs/op
+BenchmarkVerify/add-4 7715072 47.86 ns/op 3 extra/op 6 B/op 0 allocs/op
+BenchmarkVerify/ed25519verify_bare-4 6043 60999 ns/op 7 extra/op 105 B/op 2 allocs/op
+BenchmarkVerify/ed25519verify_bare-4 6044 61028 ns/op 7 extra/op 105 B/op 2 allocs/op
+BenchmarkVerify/ecdsa_verify_k1-4 7018 54874 ns/op 7 extra/op 343 B/op 6 allocs/op
+BenchmarkVerify/ecdsa_verify_k1-4 7020 52197 ns/op 7 extra/op 343 B/op 6 allocs/op
+BenchmarkVerify/ecdsa_verify_r1-4 5086 70188 ns/op 7 extra/op 1384 B/op 24 allocs/op
+BenchmarkVerify/ecdsa_verify_r1-4 5086 70477 ns/op 7 extra/op 1384 B/op 24 allocs/op
+BenchmarkVerify/falcon_verify_FalconDet1024-4 9018 39470 ns/op 4 extra/op 2055 B/op 1 allocs/op
+BenchmarkVerify/falcon_verify_FalconDet1024-4 9082 39862 ns/op 4 extra/op 2055 B/op 1 allocs/op
+BenchmarkVerify/falcon_verify_FalconDet512-4 17986 19868 ns/op 4 extra/op 1030 B/op 1 allocs/op
+BenchmarkVerify/falcon_verify_FalconDet512-4 17481 20084 ns/op 4 extra/op 1031 B/op 1 allocs/op
+BenchmarkVerify/mldsa_verify_MLDSA44-4 3117 115141 ns/op 5 extra/op 8 B/op 0 allocs/op
+BenchmarkVerify/mldsa_verify_MLDSA44-4 3110 115152 ns/op 5 extra/op 8 B/op 0 allocs/op
+BenchmarkVerify/mldsa_verify_MLDSA65-4 1969 182726 ns/op 5 extra/op 6 B/op 0 allocs/op
+BenchmarkVerify/mldsa_verify_MLDSA65-4 1982 181453 ns/op 5 extra/op 6 B/op 0 allocs/op
+BenchmarkVerify/vrf_verify-4 1765 210533 ns/op 5 extra/op 279 B/op 6 allocs/op
+BenchmarkVerify/vrf_verify-4 1765 206920 ns/op 5 extra/op 279 B/op 6 allocs/op
+BenchmarkCheckSignature-4 55275 6218 ns/op 12320 B/op 9 allocs/op
+BenchmarkCheckSignature-4 56546 6182 ns/op 12320 B/op 9 allocs/op
+BenchmarkAddx64/add_long_stack-4 66355 5056 ns/op 17072 B/op 12 allocs/op
+BenchmarkAddx64/add_long_stack-4 66018 5099 ns/op 17072 B/op 12 allocs/op
+BenchmarkAddx64/add_small_stack-4 77294 4431 ns/op 13616 B/op 10 allocs/op
+BenchmarkAddx64/add_small_stack-4 77026 4513 ns/op 13616 B/op 10 allocs/op
+BenchmarkNopPassx1-4 117456 2827 ns/op 13616 B/op 10 allocs/op
+BenchmarkNopPassx1-4 120298 2913 ns/op 13616 B/op 10 allocs/op
+BenchmarkCheckx5-4 4724 75832 ns/op 107266 B/op 957 allocs/op
+BenchmarkCheckx5-4 4621 89534 ns/op 107266 B/op 957 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions
+
+BenchmarkAppendMsgSignedTxn-4 3672121 97.73 ns/op 10.23 MB/s 0 B/op 0 allocs/op
+BenchmarkAppendMsgSignedTxn-4 3659984 98.06 ns/op 10.2 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/data/transactions/verify
+
+BenchmarkTinyMan/eval-lsig-signature-4 23928 14708 ns/op 36840 B/op 86 allocs/op
+BenchmarkTinyMan/eval-lsig-signature-4 24712 14640 ns/op 36840 B/op 86 allocs/op
+BenchmarkTinyMan/group-check-actual-4 2613 131712 ns/op 99676 B/op 135 allocs/op
+BenchmarkTinyMan/group-check-actual-4 2728 131794 ns/op 99688 B/op 135 allocs/op
+BenchmarkTinyMan/group-check-all-crypto-4 2088 149280 ns/op 54526 B/op 34 allocs/op
+BenchmarkTinyMan/group-check-all-crypto-4 2108 149993 ns/op 54553 B/op 34 allocs/op
+BenchmarkLogicSigSanityCheck-4 40492 8769 ns/op 18296 B/op 14 allocs/op
+BenchmarkLogicSigSanityCheck-4 40664 8689 ns/op 18296 B/op 14 allocs/op
+BenchmarkPaysetGroups-4 22254 16956 ns/op 30807 B/op 7 allocs/op
+BenchmarkPaysetGroups-4 22078 16840 ns/op 30517 B/op 7 allocs/op
+BenchmarkTxn-4 10000 32105 ns/op 12304 B/op 6 allocs/op
+BenchmarkTxn-4 10000 32104 ns/op 12332 B/op 6 allocs/op
+
+pkg: github.com/algorand/go-algorand/data
+
+BenchmarkTxHandlerProcessing/processDecoded-4 20696 22662 ns/op 3864 B/op 43 allocs/op
+BenchmarkTxHandlerProcessing/processDecoded-4 16764 22129 ns/op 3864 B/op 43 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-4 5115 68798 ns/op 11872 B/op 16 allocs/op
+BenchmarkTxHandlerProcessing/verify.TxnGroup-4 5540 69391 ns/op 11872 B/op 16 allocs/op
+BenchmarkTxHandlerDecoderMsgp-4 45 7.501062e+06 ns/op 4.237478e+06 B/op 26667 allocs/op
+BenchmarkTxHandlerDecoderMsgp-4 40 7.633209e+06 ns/op 4.757161e+06 B/op 26876 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger
+
+BenchmarkCompactDeltas/account-deltas-4 500 5.366565e+06 ns/op 4.123e+06 B/op 16 allocs/op
+BenchmarkCompactDeltas/account-deltas-4 500 2.82258e+06 ns/op 4.123e+06 B/op 16 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger/apply
+
+BenchmarkApply/asset-transfer-4 675764 529.4 ns/op 512 B/op 4 allocs/op
+BenchmarkApply/asset-transfer-4 676777 542 ns/op 512 B/op 4 allocs/op
+BenchmarkApply/keyreg-4 879944 366.8 ns/op 0 B/op 0 allocs/op
+BenchmarkApply/keyreg-4 995714 343.9 ns/op 0 B/op 0 allocs/op
+BenchmarkApply/app-call-4 2366194 152.7 ns/op 0 B/op 0 allocs/op
+BenchmarkApply/app-call-4 2364775 152.4 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger
+
+BenchmarkCompactResourceDeltas-4 64 5.935693e+06 ns/op 1.0273457e+07 B/op 36 allocs/op
+BenchmarkCompactResourceDeltas-4 60 5.772494e+06 ns/op 1.0273456e+07 B/op 36 allocs/op
+BenchmarkTxTailCheckDup/hit-4 5179270 65.07 ns/op 48 B/op 1 allocs/op
+BenchmarkTxTailCheckDup/hit-4 5197332 66.23 ns/op 48 B/op 1 allocs/op
+BenchmarkTxTailCheckDup/miss-4 9736794 37.07 ns/op 0 B/op 0 allocs/op
+BenchmarkTxTailCheckDup/miss-4 9699118 37.18 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger/eval
+
+BenchmarkCowChild-4 6150621 58.62 ns/op 0 B/op 0 allocs/op
+BenchmarkCowChild-4 6149221 58.55 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger/eval/prefetcher
+
+BenchmarkPrefetcherApps-4 1000000 337.8 ns/op 111 B/op 1 allocs/op
+BenchmarkPrefetcherApps-4 1000000 335.8 ns/op 111 B/op 1 allocs/op
+BenchmarkPrefetcherPayment-4 1404850 255.3 ns/op 83 B/op 0 allocs/op
+BenchmarkPrefetcherPayment-4 1465076 256.2 ns/op 83 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger
+
+BenchmarkBlockEvaluatorRAMNoCrypto-4 2 5.41093612e+08 ns/op 10823 ns/eval_validate_tx 5.8995356e+08 B/op 1.351128e+06 allocs/op
+BenchmarkBlockEvaluatorRAMNoCrypto-4 2 5.3475829e+08 ns/op 10696 ns/eval_validate_tx 5.89945044e+08 B/op 1.351118e+06 allocs/op
+BenchmarkBlockValidationMix-4 1 1.791285145e+09 ns/op 1.930292208e+09 B/op 7.474165e+06 allocs/op
+BenchmarkBlockValidationMix-4 1 1.528075007e+09 ns/op 1.933104016e+09 B/op 7.450841e+06 allocs/op
+BenchmarkAppInt1-4 1 9.48965004e+08 ns/op 1.973854368e+09 B/op 2.941523e+06 allocs/op
+BenchmarkAppInt1-4 1 1.007494292e+09 ns/op 1.973926576e+09 B/op 2.941527e+06 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger/ledgercore
+
+BenchmarkAccountDeltasOps/upsert-4 578 611119 ns/op 3.539643e+06 B/op 35 allocs/op
+BenchmarkAccountDeltasOps/upsert-4 619 575905 ns/op 3.539635e+06 B/op 35 allocs/op
+BenchmarkAccountDeltasOps/merge-4 718 500576 ns/op 800528 B/op 66 allocs/op
+BenchmarkAccountDeltasOps/merge-4 697 496281 ns/op 800528 B/op 66 allocs/op
+BenchmarkAccountDeltasOps/optimize-4 3166 116082 ns/op 1.131185e+06 B/op 35 allocs/op
+BenchmarkAccountDeltasOps/optimize-4 3114 117220 ns/op 1.131184e+06 B/op 35 allocs/op
+BenchmarkMakeStateDelta-4 309 1.723747e+06 ns/op 2.0811618e+07 B/op 197 allocs/op
+BenchmarkMakeStateDelta-4 266 1.61354e+06 ns/op 2.0811619e+07 B/op 197 allocs/op
+
+pkg: github.com/algorand/go-algorand/ledger
+
+BenchmarkOnlineAccountsCacheRead320-4 100 3.086078e+06 ns/op 705478 B/op 4021 allocs/op
+BenchmarkOnlineAccountsCacheRead320-4 100 3.068154e+06 ns/op 705478 B/op 4021 allocs/op
+
+pkg: github.com/algorand/go-algorand/network
+
+BenchmarkMessageFilterCheck/hit-4 37011 9277 ns/op 1248 B/op 9 allocs/op
+BenchmarkMessageFilterCheck/hit-4 43801 9988 ns/op 1248 B/op 9 allocs/op
+BenchmarkMessageFilterCheck/miss-4 41124 9865 ns/op 1248 B/op 9 allocs/op
+BenchmarkMessageFilterCheck/miss-4 45049 9474 ns/op 1248 B/op 9 allocs/op
+BenchmarkGenerateMessageDigest-4 810571 442.3 ns/op 0 B/op 0 allocs/op
+BenchmarkGenerateMessageDigest-4 808707 442.1 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/network/vpack
+
+BenchmarkVpackVote/compress-4 1229641 296.6 ns/op 2117.25 MB/s 0 B/op 0 allocs/op
+BenchmarkVpackVote/compress-4 1220848 294.4 ns/op 2133.09 MB/s 0 B/op 0 allocs/op
+BenchmarkVpackVote/decompress-4 3022549 116.3 ns/op 4058.02 MB/s 0 B/op 0 allocs/op
+BenchmarkVpackVote/decompress-4 2998070 118.9 ns/op 3969.02 MB/s 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/util/bloom
+
+BenchmarkBloomFilterSet-4 4011259 89.34 ns/op 0 B/op 0 allocs/op
+BenchmarkBloomFilterSet-4 4021605 89.34 ns/op 0 B/op 0 allocs/op
+BenchmarkBloomFilterTest-4 4068318 86.61 ns/op 0 B/op 0 allocs/op
+BenchmarkBloomFilterTest-4 4158050 86.57 ns/op 0 B/op 0 allocs/op
+
+pkg: github.com/algorand/go-algorand/util/metrics
+
+BenchmarkTagCounter-4 26602264 12.84 ns/op 0 B/op 0 allocs/op
+BenchmarkTagCounter-4 27262600 12.69 ns/op 0 B/op 0 allocs/op
