@@ -1,0 +1,232 @@
+  [1/2]  bench  VoteVerify                            425,761 ns/op   6,888 B/op   65.0 allocs/op
+  [2/2]  bench  VoteVerify                            419,054 ns/op ±2%   6,888 B/op   65.0 allocs/op    520ms
+  [1/2]  bench  CryptoVerifierVoteVertification       186,836 ns/op   24,014 B/op   71.0 allocs/op
+  [2/2]  bench  CryptoVerifierVoteVertification       185,606 ns/op ±1%   24,010 B/op ±0%   71.0 allocs/op    510ms
+  [1/2]  bench  CryptoVerifierProposalVertification   262,751 ns/op   17,098 B/op   57.0 allocs/op
+  [2/2]  bench  CryptoVerifierProposalVertification   269,910 ns/op ±3%   17,098 B/op   57.0 allocs/op    570ms
+  [1/2]  bench  VoteDecoding                          322 ns/op   1,152 B/op   2.00 allocs/op
+  [2/2]  bench  VoteDecoding                          331 ns/op ±3%   1,152 B/op   2.00 allocs/op    670ms
+  [1/2]  bench  RouterUpdate/root                     96.6 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  RouterUpdate/root                     99.6 ns/op ±3%   0.000 B/op   0.000 allocs/op    480ms
+  [1/2]  bench  RouterUpdate/round                    56.7 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  RouterUpdate/round                    56.8 ns/op ±0%   0.000 B/op   0.000 allocs/op    420ms
+  [1/2]  bench  NoiseSentinelHash                     36,205 ns/op   1,810 MB/s   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  NoiseSentinelHash                     36,178 ns/op ±0%   1,812 MB/s ±0%   0.000 B/op   0.000 allocs/op    360ms
+  [1/2]  bench  NoiseSentinelLoop                     6,691 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  NoiseSentinelLoop                     6,694 ns/op ±0%   0.000 B/op   0.000 allocs/op    420ms
+  [1/2]  bench  BatchVerifierImpls/libsodium_single   3,939,598 ns/op   21,264 B/op   261 allocs/op
+  [2/2]  bench  BatchVerifierImpls/libsodium_single   3,970,708 ns/op ±1%   21,264 B/op   261 allocs/op    360ms
+  [1/2]  bench  BatchVerifierImpls/libsodium_batch    1,622,344 ns/op   26,064 B/op   12.0 allocs/op
+  [2/2]  bench  BatchVerifierImpls/libsodium_batch    1,629,688 ns/op ±0%   26,064 B/op   12.0 allocs/op    520ms
+  [1/2]  bench  BatchVerifierImpls/ed25519consensus   1,577,046 ns/op   268,224 B/op   73.0 allocs/op
+  [2/2]  bench  BatchVerifierImpls/ed25519consensus   1,578,666 ns/op ±0%   268,224 B/op   73.0 allocs/op    510ms
+  [1/2]  bench  Hash                                  215 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  Hash                                  215 ns/op ±0%   0.000 B/op   0.000 allocs/op    580ms
+  [1/2]  bench  SignVerify                            78,133 ns/op   336 B/op   10.0 allocs/op
+  [2/2]  bench  SignVerify                            77,237 ns/op ±1%   336 B/op   10.0 allocs/op    360ms
+  [1/2]  bench  Verify25519/libsodium                 62,949 ns/op   128 B/op   4.00 allocs/op
+  [2/2]  bench  Verify25519/libsodium                 61,844 ns/op ±2%   128 B/op   4.00 allocs/op    470ms
+  [1/2]  bench  Verify25519/ed25519consensus          53,043 ns/op   32.0 B/op   2.00 allocs/op
+  [2/2]  bench  Verify25519/ed25519consensus          53,000 ns/op ±0%   32.0 B/op   2.00 allocs/op    470ms
+  [1/2]  bench  OneTimeSigBatchVerification/libsodium_singles  184,104 ns/op   1,303 B/op   24.0 allocs/op
+  [2/2]  bench  OneTimeSigBatchVerification/libsodium_singles  185,940 ns/op ±1%   1,304 B/op ±0%   24.0 allocs/op    630ms
+  [1/2]  bench  OneTimeSigBatchVerification/libsodium_batch  161,839 ns/op   1,144 B/op   17.0 allocs/op
+  [2/2]  bench  OneTimeSigBatchVerification/libsodium_batch  160,738 ns/op ±1%   1,144 B/op   17.0 allocs/op    630ms
+  [1/2]  bench  OneTimeSigBatchVerification/ed25519consensus_batch  112,517 ns/op   14,280 B/op   18.0 allocs/op
+  [2/2]  bench  OneTimeSigBatchVerification/ed25519consensus_batch  112,460 ns/op ±0%   14,280 B/op   18.0 allocs/op    660ms
+  [1/2]  bench  VrfVerify                             204,170 ns/op   176 B/op   3.00 allocs/op
+  [2/2]  bench  VrfVerify                             206,653 ns/op ±1%   176 B/op   3.00 allocs/op    720ms
+  [1/2]  bench  AppRateLimiter_TxgroupToKeys          18,975 ns/op   9,512 B/op   3.00 allocs/op
+  [2/2]  bench  AppRateLimiter_TxgroupToKeys          19,024 ns/op ±0%   9,512 B/op   3.00 allocs/op    810ms
+  [1/2]  bench  AddressFormatting                     274 ns/op   128 B/op   2.00 allocs/op
+  [2/2]  bench  AddressFormatting                     274 ns/op ±0%   128 B/op   2.00 allocs/op    630ms
+  [1/2]  bench  UnmarshalChecksumAddress              649 ns/op   192 B/op   3.00 allocs/op
+  [2/2]  bench  UnmarshalChecksumAddress              650 ns/op ±0%   192 B/op   3.00 allocs/op    340ms
+  [1/2]  bench  CodecRealistic/encode-signed-pay      639 ns/op   2,688 B/op   1.00 allocs/op
+  [2/2]  bench  CodecRealistic/encode-signed-pay      639 ns/op ±0%   2,688 B/op   1.00 allocs/op    670ms
+  [1/2]  bench  CodecRealistic/decode-signed-pay      192 ns/op   64.0 B/op   3.00 allocs/op
+  [2/2]  bench  CodecRealistic/decode-signed-pay      192 ns/op ±0%   64.0 B/op   3.00 allocs/op    550ms
+  [1/2]  bench  CodecRealistic/encode-signed-appl     734 ns/op   3,072 B/op   1.00 allocs/op
+  [2/2]  bench  CodecRealistic/encode-signed-appl     728 ns/op ±1%   3,072 B/op   1.00 allocs/op    310ms
+  [1/2]  bench  CodecRealistic/decode-signed-appl     485 ns/op   376 B/op   13.0 allocs/op
+  [2/2]  bench  CodecRealistic/decode-signed-appl     484 ns/op ±0%   376 B/op   13.0 allocs/op    620ms
+  [1/2]  bench  CodecRealistic/encode-block-header    649 ns/op   1,824 B/op   3.00 allocs/op
+  [2/2]  bench  CodecRealistic/encode-block-header    646 ns/op ±1%   1,824 B/op   3.00 allocs/op    660ms
+  [1/2]  bench  CodecRealistic/decode-block-header    653 ns/op   720 B/op   9.00 allocs/op
+  [2/2]  bench  CodecRealistic/decode-block-header    652 ns/op ±0%   720 B/op   9.00 allocs/op    660ms
+  [1/2]  bench  HashObj/txn                           1,327 ns/op   3,936 B/op   3.00 allocs/op
+  [2/2]  bench  HashObj/txn                           1,322 ns/op ±0%   3,936 B/op   3.00 allocs/op    340ms
+  [1/2]  bench  HashObj/block-header                  2,478 ns/op   3,552 B/op   5.00 allocs/op
+  [2/2]  bench  HashObj/block-header                  2,500 ns/op ±1%   3,552 B/op   5.00 allocs/op    360ms
+  [1/2]  bench  AppendMsgBlockHeader                  46.7 ns/op   21.4 MB/s   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  AppendMsgBlockHeader                  46.9 ns/op ±0%   21.3 MB/s ±0%   0.000 B/op   0.000 allocs/op    400ms
+  [1/2]  bench  Sortition                             450,658 ns/op   1,824 B/op   21.0 allocs/op
+  [2/2]  bench  Sortition                             450,653 ns/op ±0%   1,824 B/op   21.0 allocs/op    410ms
+  [1/2]  bench  StatusCachePut                        1,028 ns/op   220 B/op   1.00 allocs/op
+  [2/2]  bench  StatusCachePut                        1,023 ns/op ±0%   220 B/op   1.00 allocs/op    370ms
+  [1/2]  bench  StatusCacheCheckHit                   229 ns/op   19.0 B/op   2.00 allocs/op
+  [2/2]  bench  StatusCacheCheckHit                   228 ns/op ±0%   19.0 B/op   2.00 allocs/op    600ms
+  [1/2]  bench  StatusCacheCheckMiss                  85.8 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  StatusCacheCheckMiss                  86.3 ns/op ±1%   0.000 B/op   0.000 allocs/op    450ms
+  [1/2]  bench  TxnIDs/signed-txn-id                  613 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  TxnIDs/signed-txn-id                  613 ns/op ±0%   0.000 B/op   0.000 allocs/op    360ms
+  [1/2]  bench  TxnIDs/group-id                       15,194 ns/op   2,276 B/op   4.00 allocs/op
+  [2/2]  bench  TxnIDs/group-id                       15,280 ns/op ±1%   2,280 B/op ±0%   4.00 allocs/op    510ms
+  [1/2]  bench  WellFormed/pay                        146 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  WellFormed/pay                        147 ns/op ±1%   0.000 B/op   0.000 allocs/op    510ms
+  [1/2]  bench  WellFormed/axfer                      131 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  WellFormed/axfer                      131 ns/op ±0%   0.000 B/op   0.000 allocs/op    490ms
+  [1/2]  bench  WellFormed/acfg                       131 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  WellFormed/acfg                       131 ns/op   0.000 B/op   0.000 allocs/op    490ms
+  [1/2]  bench  WellFormed/appl                       167 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  WellFormed/appl                       167 ns/op ±0%   0.000 B/op   0.000 allocs/op    530ms
+  [1/2]  bench  WellFormed/keyreg                     172 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  WellFormed/keyreg                     171 ns/op ±1%   0.000 B/op   0.000 allocs/op    530ms
+  [1/2]  bench  Assemble                              254,973 ns/op   328,781 B/op   3,260 allocs/op
+  [2/2]  bench  Assemble                              252,457 ns/op ±1%   328,782 B/op ±0%   3,260 allocs/op    360ms
+  [1/2]  bench  Disassemble                           46,582 ns/op   49,982 B/op   888 allocs/op
+  [2/2]  bench  Disassemble                           46,710 ns/op ±0%   49,982 B/op   888 allocs/op    670ms
+  [1/2]  bench  BoxOps/box_get                        2,181 ns/op   3.00 extra/op   3,364 B/op   33.0 allocs/op
+  [2/2]  bench  BoxOps/box_get                        2,186 ns/op ±0%   3.00 extra/op   3,364 B/op   33.0 allocs/op    410ms
+  [1/2]  bench  BoxOps/box_len                        1,794 ns/op   3.00 extra/op   1,024 B/op   31.0 allocs/op
+  [2/2]  bench  BoxOps/box_len                        1,791 ns/op ±0%   3.00 extra/op   1,024 B/op   31.0 allocs/op    410ms
+  [1/2]  bench  BoxOps/box_extract                    2,192 ns/op   4.00 extra/op   1,522 B/op   37.0 allocs/op
+  [2/2]  bench  BoxOps/box_extract                    2,169 ns/op ±1%   4.00 extra/op   1,522 B/op ±0%   37.0 allocs/op    420ms
+  [1/2]  bench  BoxOps/box_replace                    2,077 ns/op   3.00 extra/op   1,308 B/op   34.0 allocs/op
+  [2/2]  bench  BoxOps/box_replace                    2,010 ns/op ±3%   3.00 extra/op   1,308 B/op   34.0 allocs/op    410ms
+  [1/2]  bench  BoxOps/box_splice                     2,434 ns/op   4.00 extra/op   1,626 B/op   42.0 allocs/op
+  [2/2]  bench  BoxOps/box_splice                     2,432 ns/op ±0%   4.00 extra/op   1,626 B/op   42.0 allocs/op    420ms
+  [1/2]  bench  BoxOps/box_put                        2,088 ns/op   3.00 extra/op   2,024 B/op   30.0 allocs/op
+  [2/2]  bench  BoxOps/box_put                        2,068 ns/op ±1%   3.00 extra/op   2,024 B/op   30.0 allocs/op    400ms
+  [1/2]  bench  BoxOps/box_resize                     4,320 ns/op   5.00 extra/op   1,724 B/op   52.0 allocs/op
+  [2/2]  bench  BoxOps/box_resize                     4,370 ns/op ±1%   5.00 extra/op   1,723 B/op ±0%   52.0 allocs/op    450ms
+  [1/2]  bench  BoxOps/box_create_del                 3,873 ns/op   6.00 extra/op   1,779 B/op   54.0 allocs/op
+  [2/2]  bench  BoxOps/box_create_del                 3,887 ns/op ±0%   6.00 extra/op   1,779 B/op ±0%   54.0 allocs/op    430ms
+  [1/2]  bench  InnerTxn/pay                          15,892 ns/op   25,205 B/op   129 allocs/op
+  [2/2]  bench  InnerTxn/pay                          15,888 ns/op ±0%   25,205 B/op   129 allocs/op    510ms
+  [1/2]  bench  InnerTxn/axfer                        16,425 ns/op   25,180 B/op   134 allocs/op
+  [2/2]  bench  InnerTxn/axfer                        16,141 ns/op ±2%   25,181 B/op ±0%   134 allocs/op    520ms
+  [1/2]  bench  InnerTxn/appl                         16,029 ns/op   33,110 B/op   100 allocs/op
+  [2/2]  bench  InnerTxn/appl                         16,076 ns/op ±0%   33,110 B/op   100 allocs/op    520ms
+  [1/2]  bench  StateOps/app_global_get               1,099 ns/op   2.00 extra/op   678 B/op   21.0 allocs/op
+  [2/2]  bench  StateOps/app_global_get               1,092 ns/op ±1%   2.00 extra/op   678 B/op   21.0 allocs/op    380ms
+  [1/2]  bench  StateOps/app_global_put               1,649 ns/op   2.00 extra/op   1,354 B/op   27.0 allocs/op
+  [2/2]  bench  StateOps/app_global_put               1,640 ns/op ±1%   2.00 extra/op   1,354 B/op   27.0 allocs/op    380ms
+  [1/2]  bench  StateOps/app_global_del               777 ns/op   1.00 extra/op   499 B/op   15.0 allocs/op
+  [2/2]  bench  StateOps/app_global_del               779 ns/op ±0%   1.00 extra/op   499 B/op   15.0 allocs/op    350ms
+  [1/2]  bench  StateOps/app_local_get                1,619 ns/op   3.00 extra/op   913 B/op   29.0 allocs/op
+  [2/2]  bench  StateOps/app_local_get                1,609 ns/op ±1%   3.00 extra/op   913 B/op   29.0 allocs/op    400ms
+  [1/2]  bench  StateOps/app_local_put                1,860 ns/op   3.00 extra/op   1,166 B/op   33.0 allocs/op
+  [2/2]  bench  StateOps/app_local_put                1,933 ns/op ±4%   3.00 extra/op   1,166 B/op   33.0 allocs/op    430ms
+  [1/2]  bench  StateOps/app_local_del                1,331 ns/op   2.00 extra/op   702 B/op   23.0 allocs/op
+  [2/2]  bench  StateOps/app_local_del                1,330 ns/op ±0%   2.00 extra/op   702 B/op   23.0 allocs/op    390ms
+  [1/2]  bench  StateOps/asset_holding_get            2,164 ns/op   4.00 extra/op   1,277 B/op   36.0 allocs/op
+  [2/2]  bench  StateOps/asset_holding_get            2,151 ns/op ±1%   4.00 extra/op   1,277 B/op   36.0 allocs/op    410ms
+  [1/2]  bench  StateOps/asset_params_get             1,850 ns/op   3.00 extra/op   1,509 B/op   34.0 allocs/op
+  [2/2]  bench  StateOps/asset_params_get             1,852 ns/op ±0%   3.00 extra/op   1,509 B/op   34.0 allocs/op    390ms
+  [1/2]  bench  StateOps/app_params_get               1,755 ns/op   3.00 extra/op   1,325 B/op   30.0 allocs/op
+  [2/2]  bench  StateOps/app_params_get               1,744 ns/op ±1%   3.00 extra/op   1,325 B/op   30.0 allocs/op    400ms
+  [1/2]  bench  StateOps/acct_params_get              2,863 ns/op   3.00 extra/op   1,709 B/op   36.0 allocs/op
+  [2/2]  bench  StateOps/acct_params_get              2,862 ns/op ±0%   3.00 extra/op   1,709 B/op   36.0 allocs/op    410ms
+  [1/2]  bench  Verify/pop                            41.8 ns/op   3.00 extra/op   7.00 B/op   0.000 allocs/op
+  [2/2]  bench  Verify/pop                            41.8 ns/op ±0%   3.00 extra/op   7.00 B/op   0.000 allocs/op    470ms
+  [1/2]  bench  Verify/add                            46.0 ns/op   3.00 extra/op   7.00 B/op   0.000 allocs/op
+  [2/2]  bench  Verify/add                            45.8 ns/op ±0%   3.00 extra/op   7.00 B/op   0.000 allocs/op    470ms
+  [1/2]  bench  Verify/ed25519verify_bare             61,663 ns/op   7.00 extra/op   103 B/op   2.00 allocs/op
+  [2/2]  bench  Verify/ed25519verify_bare             65,309 ns/op ±6%   7.00 extra/op   103 B/op   2.00 allocs/op    550ms
+  [1/2]  bench  Verify/ecdsa_verify_k1                51,640 ns/op   7.00 extra/op   344 B/op   6.00 allocs/op
+  [2/2]  bench  Verify/ecdsa_verify_k1                51,649 ns/op ±0%   7.00 extra/op   344 B/op   6.00 allocs/op    500ms
+  [1/2]  bench  Verify/ecdsa_verify_r1                70,790 ns/op   7.00 extra/op   1,384 B/op   24.0 allocs/op
+  [2/2]  bench  Verify/ecdsa_verify_r1                70,651 ns/op ±0%   7.00 extra/op   1,384 B/op   24.0 allocs/op    500ms
+  [1/2]  bench  Verify/falcon_verify_FalconDet1024    39,844 ns/op   4.00 extra/op   2,056 B/op   1.00 allocs/op
+  [2/2]  bench  Verify/falcon_verify_FalconDet1024    39,684 ns/op ±0%   4.00 extra/op   2,056 B/op   1.00 allocs/op    760ms
+  [1/2]  bench  Verify/falcon_verify_FalconDet512     20,113 ns/op   4.00 extra/op   1,031 B/op   1.00 allocs/op
+  [2/2]  bench  Verify/falcon_verify_FalconDet512     20,085 ns/op ±0%   4.00 extra/op   1,031 B/op   1.00 allocs/op    990ms
+  [1/2]  bench  Verify/mldsa_verify_MLDSA44           114,293 ns/op   5.00 extra/op   9.00 B/op   0.000 allocs/op
+  [2/2]  bench  Verify/mldsa_verify_MLDSA44           114,447 ns/op ±0%   5.00 extra/op   9.00 B/op   0.000 allocs/op    690ms
+  [1/2]  bench  Verify/mldsa_verify_MLDSA65           180,550 ns/op   5.00 extra/op   7.00 B/op   0.000 allocs/op
+  [2/2]  bench  Verify/mldsa_verify_MLDSA65           181,113 ns/op ±0%   5.00 extra/op   7.00 B/op   0.000 allocs/op    790ms
+  [1/2]  bench  Verify/vrf_verify                     206,005 ns/op   5.00 extra/op   280 B/op   6.00 allocs/op
+  [2/2]  bench  Verify/vrf_verify                     208,361 ns/op ±1%   5.00 extra/op   280 B/op   6.00 allocs/op    500ms
+  [1/2]  bench  CheckSignature                        6,341 ns/op   12,320 B/op   9.00 allocs/op
+  [2/2]  bench  CheckSignature                        6,347 ns/op ±0%   12,320 B/op   9.00 allocs/op    420ms
+  [1/2]  bench  Addx64/add_long_stack                 5,313 ns/op   17,696 B/op   14.0 allocs/op
+  [2/2]  bench  Addx64/add_long_stack                 5,362 ns/op ±1%   17,696 B/op   14.0 allocs/op    410ms
+  [1/2]  bench  Addx64/add_small_stack                4,769 ns/op   14,240 B/op   12.0 allocs/op
+  [2/2]  bench  Addx64/add_small_stack                4,781 ns/op ±0%   14,240 B/op   12.0 allocs/op    400ms
+  [1/2]  bench  NopPassx1                             2,919 ns/op   14,240 B/op   12.0 allocs/op
+  [2/2]  bench  NopPassx1                             2,952 ns/op ±1%   14,240 B/op   12.0 allocs/op    370ms
+  [1/2]  bench  Checkx5                               78,370 ns/op   107,267 B/op   957 allocs/op
+  [2/2]  bench  Checkx5                               78,694 ns/op ±0%   107,267 B/op   957 allocs/op    660ms
+  [1/2]  bench  AppendMsgSignedTxn                    96.7 ns/op   10.3 MB/s   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  AppendMsgSignedTxn                    96.7 ns/op ±0%   10.3 MB/s ±0%   0.000 B/op   0.000 allocs/op    460ms
+  [1/2]  bench  TinyMan/eval-lsig-signature           15,398 ns/op   38,088 B/op   90.0 allocs/op
+  [2/2]  bench  TinyMan/eval-lsig-signature           15,454 ns/op ±0%   38,088 B/op   90.0 allocs/op    520ms
+  [1/2]  bench  TinyMan/group-check-actual            134,216 ns/op   100,175 B/op   137 allocs/op
+  [2/2]  bench  TinyMan/group-check-actual            133,938 ns/op ±0%   100,173 B/op ±0%   137 allocs/op    1.21s
+  [1/2]  bench  TinyMan/group-check-all-crypto        150,208 ns/op   54,214 B/op   30.0 allocs/op
+  [2/2]  bench  TinyMan/group-check-all-crypto        150,517 ns/op ±0%   54,130 B/op ±0%   30.0 allocs/op    340ms
+  [1/2]  bench  LogicSigSanityCheck                   8,850 ns/op   18,040 B/op   14.0 allocs/op
+  [2/2]  bench  LogicSigSanityCheck                   8,905 ns/op ±1%   18,040 B/op   14.0 allocs/op    440ms
+  [1/2]  bench  PaysetGroups                          16,551 ns/op   30,486 B/op   6.00 allocs/op
+  [2/2]  bench  PaysetGroups                          16,289 ns/op ±2%   29,874 B/op ±2%   5.50 allocs/op ±9%    940ms
+  [1/2]  bench  Txn                                   31,967 ns/op   12,298 B/op   5.00 allocs/op
+  [2/2]  bench  Txn                                   31,928 ns/op ±0%   12,269 B/op ±0%   5.00 allocs/op    1.06s
+  [1/2]  bench  TxHandlerProcessing/processDecoded    20,554 ns/op   3,872 B/op   44.0 allocs/op
+  [2/2]  bench  TxHandlerProcessing/processDecoded    21,681 ns/op ±5%   3,872 B/op   44.0 allocs/op    1.3s
+  [1/2]  bench  TxHandlerProcessing/verify.TxnGroup   68,928 ns/op   11,872 B/op   16.0 allocs/op
+  [2/2]  bench  TxHandlerProcessing/verify.TxnGroup   69,301 ns/op ±1%   11,872 B/op   16.0 allocs/op    530ms
+  [1/2]  bench  TxHandlerDecoderMsgp                  8,479,366 ns/op   4,430,849 B/op   26,745 allocs/op
+  [2/2]  bench  TxHandlerDecoderMsgp                  8,059,105 ns/op ±5%   4,288,974 B/op ±3%   26,688 allocs/op ±0%    930ms
+  [1/2]  bench  CompactDeltas/account-deltas          5,384,774 ns/op   4,123,000 B/op   16.0 allocs/op
+  [2/2]  bench  CompactDeltas/account-deltas          4,064,978 ns/op ±32%   4,123,000 B/op   16.0 allocs/op    2.68s
+  [1/2]  bench  Apply/asset-transfer                  542 ns/op   512 B/op   4.00 allocs/op
+  [2/2]  bench  Apply/asset-transfer                  537 ns/op ±1%   512 B/op   4.00 allocs/op    640ms
+  [1/2]  bench  Apply/keyreg                          340 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  Apply/keyreg                          340 ns/op ±0%   0.000 B/op   0.000 allocs/op    340ms
+  [1/2]  bench  Apply/app-call                        153 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  Apply/app-call                        152 ns/op ±1%   0.000 B/op   0.000 allocs/op    510ms
+  [1/2]  bench  CompactResourceDeltas                 5,551,756 ns/op   10,273,456 B/op   36.0 allocs/op
+  [2/2]  bench  CompactResourceDeltas                 5,606,255 ns/op ±1%   10,273,456 B/op   36.0 allocs/op    660ms
+  [1/2]  bench  TxTailCheckDup/hit                    66.0 ns/op   48.0 B/op   1.00 allocs/op
+  [2/2]  bench  TxTailCheckDup/hit                    66.5 ns/op ±1%   48.0 B/op   1.00 allocs/op    420ms
+  [1/2]  bench  TxTailCheckDup/miss                   34.3 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  TxTailCheckDup/miss                   34.1 ns/op ±1%   0.000 B/op   0.000 allocs/op    400ms
+  [1/2]  bench  CowChild                              58.7 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  CowChild                              58.5 ns/op ±0%   0.000 B/op   0.000 allocs/op    420ms
+  [1/2]  bench  PrefetcherApps                        304 ns/op   111 B/op   1.00 allocs/op
+  [2/2]  bench  PrefetcherApps                        305 ns/op ±0%   111 B/op   1.00 allocs/op    730ms
+  [1/2]  bench  PrefetcherPayment                     263 ns/op   83.0 B/op   0.000 allocs/op
+  [2/2]  bench  PrefetcherPayment                     260 ns/op ±1%   83.0 B/op   0.000 allocs/op    1.56s
+  [1/2]  bench  BlockEvaluatorRAMNoCrypto             619,162,628 ns/op   12,384 ns/eval_validate_tx   589,969,656 B/op   1,351,155 allocs/op
+  [2/2]  bench  BlockEvaluatorRAMNoCrypto             573,069,800 ns/op ±8%   11,462 ns/eval_validate_tx ±8%   589,955,216 B/op ±0%   1,351,137 allocs/op ±0%    9.29s
+  [1/2]  bench  BlockValidationMix                    1,175,003,847 ns/op   1,889,406,480 B/op   6,899,686 allocs/op
+  [2/2]  bench  BlockValidationMix                    1,158,703,625 ns/op ±1%   1,885,864,352 B/op ±0%   6,879,586 allocs/op ±0%    9.49s
+  [1/2]  bench  AppInt1                               926,923,464 ns/op   2,014,223,976 B/op   3,070,434 allocs/op
+  [2/2]  bench  AppInt1                               927,580,138 ns/op ±0%   2,014,025,772 B/op ±0%   3,070,426 allocs/op ±0%    2.43s
+  [1/2]  bench  AccountDeltasOps/upsert               603,212 ns/op   3,539,633 B/op   35.0 allocs/op
+  [2/2]  bench  AccountDeltasOps/upsert               612,054 ns/op ±1%   3,539,634 B/op ±0%   35.0 allocs/op    430ms
+  [1/2]  bench  AccountDeltasOps/merge                514,012 ns/op   800,529 B/op   66.0 allocs/op
+  [2/2]  bench  AccountDeltasOps/merge                507,307 ns/op ±1%   800,529 B/op ±0%   66.0 allocs/op    750ms
+  [1/2]  bench  AccountDeltasOps/optimize             123,403 ns/op   1,131,184 B/op   35.0 allocs/op
+  [2/2]  bench  AccountDeltasOps/optimize             124,682 ns/op ±1%   1,131,185 B/op ±0%   35.0 allocs/op    920ms
+  [1/2]  bench  MakeStateDelta                        976,137 ns/op   20,811,619 B/op   197 allocs/op
+  [2/2]  bench  MakeStateDelta                        1,068,359 ns/op ±9%   20,811,618 B/op ±0%   197 allocs/op    780ms
+  [1/2]  bench  OnlineAccountsCacheRead320            3,283,933 ns/op   705,479 B/op   4,021 allocs/op
+  [2/2]  bench  OnlineAccountsCacheRead320            3,190,074 ns/op ±3%   705,479 B/op ±0%   4,021 allocs/op    310ms
+  [1/2]  bench  MessageFilterCheck/hit                9,034 ns/op   1,248 B/op   9.00 allocs/op
+  [2/2]  bench  MessageFilterCheck/hit                8,882 ns/op ±2%   1,248 B/op   9.00 allocs/op    450ms
+  [1/2]  bench  MessageFilterCheck/miss               9,209 ns/op   1,248 B/op   9.00 allocs/op
+  [2/2]  bench  MessageFilterCheck/miss               8,967 ns/op ±3%   1,248 B/op   9.00 allocs/op    530ms
+  [1/2]  bench  GenerateMessageDigest                 443 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  GenerateMessageDigest                 443 ns/op ±0%   0.000 B/op   0.000 allocs/op    360ms
+  [1/2]  bench  VpackVote/compress                    286 ns/op   2,198 MB/s   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  VpackVote/compress                    286 ns/op ±0%   2,193 MB/s ±0%   0.000 B/op   0.000 allocs/op    650ms
+  [1/2]  bench  VpackVote/decompress                  96.9 ns/op   4,872 MB/s   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  VpackVote/decompress                  96.4 ns/op ±0%   4,896 MB/s ±0%   0.000 B/op   0.000 allocs/op    450ms
+  [1/2]  bench  BloomFilterSet                        89.6 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  BloomFilterSet                        89.7 ns/op ±0%   0.000 B/op   0.000 allocs/op    1.65s
+  [1/2]  bench  BloomFilterTest                       86.7 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  BloomFilterTest                       86.6 ns/op ±0%   0.000 B/op   0.000 allocs/op    1.86s
+  [1/2]  bench  TagCounter                            13.0 ns/op   0.000 B/op   0.000 allocs/op
+  [2/2]  bench  TagCounter                            12.8 ns/op ±1%   0.000 B/op   0.000 allocs/op    350ms
